@@ -15,12 +15,12 @@ customPostCssPlugin = () => {
 module.exports = {
   title: "AutoGen",
   tagline: "An Open-Source Programming Framework for Agentic AI",
-  url: "https://microsoft.github.io",
+  url: "https://autogenhub.github.io",
   baseUrl: "/autogen/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/ag.ico",
-  organizationName: "Microsoft", // Usually your GitHub org/user name.
+  organizationName: "autogenhub", // Usually your GitHub org/user name.
   projectName: "AutoGen", // Usually your repo name.
   scripts: [
     {
@@ -33,6 +33,11 @@ module.exports = {
     format: "detect", // Support for MD files with .md extension
   },
   themeConfig: {
+    themeConfig: {
+      colorMode: {
+        defaultMode: 'dark',
+      },
+    },
     docs: {
       sidebar: {
         autoCollapseCategories: true,
@@ -131,7 +136,7 @@ module.exports = {
           items: [
             {
               label: "Dotnet",
-              href: "https://microsoft.github.io/autogen-for-net/",
+              href: "https://autogenhub.github.io/autogen-for-net/",
             },
           ],
         },
@@ -141,17 +146,22 @@ module.exports = {
           position: "left",
         },
         {
-          href: "https://github.com/microsoft/autogen",
+          to: "talks",
+          label: "Community Talks",
+          position: "left",
+        },
+        {
+          href: "https://github.com/autogenhub/autogen",
           label: "GitHub",
           position: "right",
         },
         {
-          href: "https://aka.ms/autogen-dc",
+          href: "https://discord.gg/pAbnFJrkgZ",
           label: "Discord",
           position: "right",
         },
         {
-          href: "https://twitter.com/pyautogen",
+          href: "https://twitter.com/Chi_Wang_",
           label: "Twitter",
           position: "right",
         },
@@ -160,47 +170,38 @@ module.exports = {
     footer: {
       style: "dark",
       links: [
-        // {
-        //   title: 'Docs',
-        //   items: [
-        //     {
-        //       label: 'Getting Started',
-        //       to: 'docs/getting-started',
-        //     },
-        //   ],
-        // },
         {
-          title: "Community",
+          // title: "Community",
           items: [
             //     // {
             //     //   label: 'Stack Overflow',
             //     //   href: 'https://stackoverflow.com/questions/tagged/pymarlin',
             //     // },
-            {
-              label: "Discord",
-              href: "https://aka.ms/autogen-dc",
-            },
-            {
-              label: "Twitter",
-              href: "https://twitter.com/pyautogen",
-            },
+            // {
+            //   label: "Discord",
+            //   href: "https://discord.gg/pAbnFJrkgZ",
+            // },
+            // {
+            //   label: "Twitter",
+            //   href: "https://twitter.com/Chi_Wang_",
+            // },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} AutoGen Authors |  <a target="_blank" style="color:#10adff" href="https://go.microsoft.com/fwlink/?LinkId=521839">Privacy and Cookies</a>`,
+      copyright: `Copyright © ${new Date().getFullYear()} AutoGen Authors`,
     },
-    announcementBar: {
-      id: "whats_new",
-      content:
-        'What\'s new in AutoGen? Read <a href="/autogen/blog/2024/03/03/AutoGen-Update">this blog</a> for an overview of updates',
-      backgroundColor: "#fafbfc",
-      textColor: "#091E42",
-      isCloseable: true,
-    },
+    // announcementBar: {
+    //   id: "whats_new",
+    //   content:
+    //     'What\'s new in AutoGen? Read <a href="/autogen/blog/2024/03/03/AutoGen-Update">this blog</a> for an overview of updates',
+    //   backgroundColor: "#fafbfc",
+    //   textColor: "#091E42",
+    //   isCloseable: true,
+    // },
     /* Clarity Config */
-    clarity: {
-      ID: "lnxpe6skj1", // The Tracking ID provided by Clarity
-    },
+    // clarity: {
+    //   ID: "lnxpe6skj1", // The Tracking ID provided by Clarity
+    // },
   },
   presets: [
     [
@@ -214,7 +215,7 @@ module.exports = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
-          editUrl: "https://github.com/microsoft/autogen/edit/main/website/",
+          editUrl: "https://github.com/autogenhub/autogen/edit/main/website/",
           remarkPlugins: [math],
           rehypePlugins: [katex],
         },
@@ -234,6 +235,15 @@ module.exports = {
   ],
 
   plugins: [
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'talks',
+        routeBasePath: 'talks',
+        path: './talks',
+        showReadingTime: true,
+      },
+    ],
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
@@ -292,6 +302,6 @@ module.exports = {
         ],
       },
     ],
-    ["docusaurus-plugin-clarity", {}],
+    // ["docusaurus-plugin-clarity", {}],
   ],
 };

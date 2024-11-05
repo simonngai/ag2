@@ -1,7 +1,7 @@
 sonichi:
   name: Chi Wang
-  title: Principal Researcher at Microsoft Research
-  url: https://www.linkedin.com/in/chi-wang-49b15b16/
+  title: Founder of AutoGen & FLAML
+  url: https://www.linkedin.com/in/chi-wang-autogen/
   image_url: https://github.com/sonichi.png
 
 qingyunwu:
@@ -140,3 +140,27 @@ marklysze:
   title: AI Freelancer
   url: https://github.com/marklysze
   image_url: https://github.com/marklysze.png
+
+areibman:
+  name: Alex Reibman
+  title: Co-founder/CEO at AgentOps
+  url: https://github.com/areibman
+  image_url: https://github.com/areibman.png
+
+bboynton97:
+  name: Braelyn Boynton
+  title: AI Engineer at AgentOps
+  url: https://github.com/bboynton97
+  image_url: https://github.com/bboynton97.png
+
+Noel1997:
+  name: Noel Nebu Panicker
+  title: AI Engineer at Nexla
+  url: https://github.com/Noel1997
+  image_url: https://github.com/Noel1997.png
+
+ameydesai:
+  name: Amey Desai
+  title: Head of AI at Nexla
+  url: https://github.com/ameyitis
+  image_url: https://github.com/ameyitis.png

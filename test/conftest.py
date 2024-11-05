@@ -1,10 +1,16 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 import pytest
 
 skip_openai = False
 skip_redis = False
 skip_docker = False
 reason = "requested to skip"
-MOCK_OPEN_AI_API_KEY = "sk-mockopenaiAPIkeyinexpectedformatfortestingonly"
+MOCK_OPEN_AI_API_KEY = "sk-mockopenaiAPIkeysinexpectedformatsfortestingonly"
 
 
 # Registers command-line options like '--skip-openai' and '--skip-redis' via pytest hook.

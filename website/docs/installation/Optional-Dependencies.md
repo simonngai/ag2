@@ -1,15 +1,26 @@
 # Optional Dependencies
 
+## Different LLMs
+
+AutoGen installs OpenAI package by default. To use LLMs by other providers, you can install the following packages:
+
+```bash
+pip install autogen[gemini,anthropic,mistral,together,groq,cohere]
+```
+
+Check out the [notebook](/docs/notebooks/autogen_uniformed_api_calling) and
+[blogpost](/blog/2024/06/24/AltModels-Classes) for more details.
+
 ## LLM Caching
 
 To use LLM caching with Redis, you need to install the Python package with
 the option `redis`:
 
 ```bash
-pip install "pyautogen[redis]"
+pip install "autogen[redis]"
 ```
 
-See [LLM Caching](Use-Cases/agent_chat.md#llm-caching) for details.
+See [LLM Caching](/docs/topics/llm-caching) for details.
 
 ## IPython Code Executor
 
@@ -17,7 +28,7 @@ To use the IPython code executor, you need to install the `jupyter-client`
 and `ipykernel` packages:
 
 ```bash
-pip install "pyautogen[ipython]"
+pip install "autogen[ipython]"
 ```
 
 To use the IPython code executor:
@@ -33,31 +44,27 @@ proxy = UserProxyAgent(name="proxy", code_execution_config={"executor": "ipython
 `pyautogen<0.2` offers a cost-effective hyperparameter optimization technique [EcoOptiGen](https://arxiv.org/abs/2303.04673) for tuning Large Language Models. Please install with the [blendsearch] option to use it.
 
 ```bash
-pip install "pyautogen[blendsearch]<0.2"
+pip install "autogen[blendsearch]<0.2"
 ```
 
-Example notebooks:
-
-[Optimize for Code Generation](https://github.com/microsoft/autogen/blob/main/notebook/oai_completion.ipynb)
-
-[Optimize for Math](https://github.com/microsoft/autogen/blob/main/notebook/oai_chatgpt_gpt4.ipynb)
+Checkout [Optimize for Code Generation](https://github.com/autogenhub/autogen/blob/main/notebook/oai_completion.ipynb) and [Optimize for Math](https://github.com/autogenhub/autogen/blob/main/notebook/oai_chatgpt_gpt4.ipynb) for details.
 
 ## retrievechat
 
-`pyautogen` supports retrieval-augmented generation tasks such as question answering and code generation with RAG agents. Please install with the [retrievechat] option to use it with ChromaDB.
+`autogen` supports retrieval-augmented generation tasks such as question answering and code generation with RAG agents. Please install with the [retrievechat] option to use it with ChromaDB.
 
 ```bash
-pip install "pyautogen[retrievechat]"
+pip install "autogen[retrievechat]"
 ```
 
-Alternatively `pyautogen` also supports PGVector and Qdrant which can be installed in place of ChromaDB, or alongside it.
+Alternatively `autogen` also supports PGVector and Qdrant which can be installed in place of ChromaDB, or alongside it.
 
 ```bash
-pip install "pyautogen[retrievechat-pgvector]"
+pip install "autogen[retrievechat-pgvector]"
 ```
 
 ```bash
-pip install "pyautogen[retrievechat-qdrant]"
+pip install "autogen[retrievechat-qdrant]"
 ```
 
 RetrieveChat can handle various types of documents. By default, it can process
@@ -71,60 +78,56 @@ You can find a list of all supported document types by using `autogen.retrieve_u
 
 Example notebooks:
 
-[Automated Code Generation and Question Answering with Retrieval Augmented Agents](https://github.com/microsoft/autogen/blob/main/notebook/agentchat_RetrieveChat.ipynb)
+[Automated Code Generation and Question Answering with Retrieval Augmented Agents](https://github.com/autogenhub/autogen/blob/main/notebook/agentchat_RetrieveChat.ipynb)
 
-[Group Chat with Retrieval Augmented Generation (with 5 group member agents and 1 manager agent)](https://github.com/microsoft/autogen/blob/main/notebook/agentchat_groupchat_RAG.ipynb)
+[Group Chat with Retrieval Augmented Generation (with 5 group member agents and 1 manager agent)](https://github.com/autogenhub/autogen/blob/main/notebook/agentchat_groupchat_RAG.ipynb)
 
-[Automated Code Generation and Question Answering with Qdrant based Retrieval Augmented Agents](https://github.com/microsoft/autogen/blob/main/notebook/agentchat_qdrant_RetrieveChat.ipynb)
+[Automated Code Generation and Question Answering with Qdrant based Retrieval Augmented Agents](https://github.com/autogenhub/autogen/blob/main/notebook/agentchat_RetrieveChat_qdrant.ipynb)
 
 ## Teachability
 
 To use Teachability, please install AutoGen with the [teachable] option.
 
 ```bash
-pip install "pyautogen[teachable]"
+pip install "autogen[teachable]"
 ```
 
-Example notebook: [Chatting with a teachable agent](https://github.com/microsoft/autogen/blob/main/notebook/agentchat_teachability.ipynb)
+Example notebook: [Chatting with a teachable agent](/docs/notebooks/agentchat_teachability)
 
 ## Large Multimodal Model (LMM) Agents
 
 We offered Multimodal Conversable Agent and LLaVA Agent. Please install with the [lmm] option to use it.
 
 ```bash
-pip install "pyautogen[lmm]"
+pip install "autogen[lmm]"
 ```
 
-Example notebooks:
-
-[LLaVA Agent](https://github.com/microsoft/autogen/blob/main/notebook/agentchat_lmm_llava.ipynb)
+Example notebook: [LLaVA Agent](/docs/notebooks/agentchat_lmm_llava)
 
 ## mathchat
 
 `pyautogen<0.2` offers an experimental agent for math problem solving. Please install with the [mathchat] option to use it.
 
 ```bash
-pip install "pyautogen[mathchat]<0.2"
+pip install "autogen[mathchat]<0.2"
 ```
 
-Example notebooks:
-
-[Using MathChat to Solve Math Problems](https://github.com/microsoft/autogen/blob/main/notebook/agentchat_MathChat.ipynb)
+Example notebook: [Using MathChat to Solve Math Problems](https://github.com/autogenhub/autogen/blob/main/notebook/agentchat_MathChat.ipynb)
 
 ## Graph
 
 To use a graph in `GroupChat`, particularly for graph visualization, please install AutoGen with the [graph] option.
 
 ```bash
-pip install "pyautogen[graph]"
+pip install "autogen[graph]"
 ```
 
-Example notebook: [Finite State Machine graphs to set speaker transition constraints](https://microsoft.github.io/autogen/docs/notebooks/agentchat_groupchat_finite_state_machine)
+Example notebook: [Finite State Machine graphs to set speaker transition constraints](/docs/notebooks/agentchat_groupchat_finite_state_machine)
 
 ## Long Context Handling
 
 AutoGen includes support for handling long textual contexts by leveraging the LLMLingua library for text compression. To enable this functionality, please install AutoGen with the `[long-context]` option:
 
 ```bash
-pip install "pyautogen[long-context]"
+pip install "autogen[long-context]"
 ```

@@ -1,9 +1,15 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // MiddlewareAgentCodeSnippet.cs
 
 using System.Text.Json;
 using AutoGen.Core;
-using AutoGen.OpenAI;
+using AutoGen.OpenAI.V1;
 using FluentAssertions;
 
 namespace AutoGen.BasicSample.CodeSnippet;
@@ -13,38 +19,46 @@ public class MiddlewareAgentCodeSnippet
     public async Task CreateMiddlewareAgentAsync()
     {
         #region create_middleware_agent_with_original_agent
-        // Create an agent that always replies "Hello World"
-        IAgent agent = new DefaultReplyAgent(name: "assistant", defaultReply: "Hello World");
+        // Create an agent that always replies "Hi!"
+        IAgent agent = new DefaultReplyAgent(name: "assistant", defaultReply: "Hi!");
 
         // Create a middleware agent on top of default reply agent
         var middlewareAgent = new MiddlewareAgent(innerAgent: agent);
         middlewareAgent.Use(async (messages, options, agent, ct) =>
         {
-            var lastMessage = messages.Last() as TextMessage;
-            lastMessage.Content = $"[middleware 0] {lastMessage.Content}";
+            if (messages.Last() is TextMessage lastMessage && lastMessage.Content.Contains("Hello World"))
+            {
+                lastMessage.Content = $"[middleware 0] {lastMessage.Content}";
+                return lastMessage;
+            }
+
             return await agent.GenerateReplyAsync(messages, options, ct);
         });
 
         var reply = await middlewareAgent.SendAsync("Hello World");
         reply.GetContent().Should().Be("[middleware 0] Hello World");
+        reply = await middlewareAgent.SendAsync("Hello AI!");
+        reply.GetContent().Should().Be("Hi!");
         #endregion create_middleware_agent_with_original_agent
 
         #region register_middleware_agent
         middlewareAgent = agent.RegisterMiddleware(async (messages, options, agent, ct) =>
         {
-            var lastMessage = messages.Last() as TextMessage;
-            lastMessage.Content = $"[middleware 0] {lastMessage.Content}";
+            if (messages.Last() is TextMessage lastMessage && lastMessage.Content.Contains("Hello World"))
+            {
+                lastMessage.Content = $"[middleware 0] {lastMessage.Content}";
+                return lastMessage;
+            }
+
             return await agent.GenerateReplyAsync(messages, options, ct);
         });
         #endregion register_middleware_agent
 
         #region short_circuit_middleware_agent
-        // This middleware will short circuit the agent and return the last message directly.
+        // This middleware will short circuit the agent and return a message directly.
         middlewareAgent.Use(async (messages, options, agent, ct) =>
         {
-            var lastMessage = messages.Last() as TextMessage;
-            lastMessage.Content = $"[middleware shortcut]";
-            return lastMessage;
+            return new TextMessage(Role.Assistant, $"[middleware shortcut]");
         });
         #endregion short_circuit_middleware_agent
     }

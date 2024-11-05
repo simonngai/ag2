@@ -1,11 +1,17 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // TwoAgentTest.cs
 #pragma warning disable xUnit1013
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoGen.OpenAI;
+using AutoGen.OpenAI.V1;
 using FluentAssertions;
 using Xunit.Abstractions;
 
@@ -56,7 +62,7 @@ public partial class TwoAgentTest
             name: "user",
             functionMap: new Dictionary<string, Func<string, Task<string>>>
             {
-                { this.GetWeatherFunction.Name, this.GetWeatherWrapper },
+                { this.GetWeatherFunctionContract.Name, this.GetWeatherWrapper },
             })
             .RegisterMiddleware(async (msgs, option, agent, ct) =>
             {

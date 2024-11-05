@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 import hashlib
 import importlib
 import json
@@ -103,7 +109,7 @@ Answer only YES or NO.
 """
 
     AGENT_NAME_PROMPT = """# Your task
-Suggest no more then {max_agents} experts with their name according to the following user requirement.
+Suggest no more than {max_agents} experts with their name according to the following user requirement.
 
 ## User requirement
 {task}

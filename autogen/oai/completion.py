@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 import logging
 import shutil
 import sys
@@ -7,10 +13,20 @@ from time import sleep
 from typing import Callable, Dict, List, Optional, Union
 
 import numpy as np
+
+# Adding a NullHandler to silence FLAML log warning during
+# import
+flaml_logger = logging.getLogger("flaml")
+null_handler = logging.NullHandler()
+flaml_logger.addHandler(null_handler)
+
 from flaml import BlendSearch, tune
-from flaml.automl.logger import logger_formatter
 from flaml.tune.space import is_constant
 
+# Restore logging by removing the NullHandler
+flaml_logger.removeHandler(null_handler)
+
+from .client_utils import logging_formatter
 from .openai_utils import get_key
 
 try:
@@ -37,7 +53,7 @@ logger = logging.getLogger(__name__)
 if not logger.handlers:
     # Add the console handler.
     _ch = logging.StreamHandler(stream=sys.stdout)
-    _ch.setFormatter(logger_formatter)
+    _ch.setFormatter(logging_formatter)
     logger.addHandler(_ch)
 
 
@@ -574,7 +590,7 @@ class Completion(openai_Completion):
             tune.ExperimentAnalysis: The tuning results.
         """
         logger.warning(
-            "tuning via Completion.tune is deprecated in pyautogen v0.2 and openai>=1. "
+            "tuning via Completion.tune is deprecated in autogen, pyautogen v0.2 and openai>=1. "
             "flaml.tune supports tuning more generically."
         )
         if ERROR:
@@ -726,7 +742,7 @@ class Completion(openai_Completion):
                 E.g., `prompt="Complete the following sentence: {prefix}, context={"prefix": "Today I feel"}`.
                 The actual prompt will be:
                 "Complete the following sentence: Today I feel".
-                More examples can be found at [templating](https://microsoft.github.io/autogen/docs/Use-Cases/enhanced_inference#templating).
+                More examples can be found at [templating](https://autogenhub.github.io/autogen/docs/Use-Cases/enhanced_inference#templating).
             use_cache (bool, Optional): Whether to use cached responses.
             config_list (List, Optional): List of configurations for the completion to try.
                 The first one that does not raise an error will be used.
@@ -786,9 +802,9 @@ class Completion(openai_Completion):
                 - `pass_filter`: whether the response passes the filter function. None if no filter is provided.
         """
         logger.warning(
-            "Completion.create is deprecated in pyautogen v0.2 and openai>=1. "
+            "Completion.create is deprecated in autogen, pyautogen v0.2 and openai>=1. "
             "The new openai requires initiating a client for inference. "
-            "Please refer to https://microsoft.github.io/autogen/docs/Use-Cases/enhanced_inference#api-unification"
+            "Please refer to https://autogenhub.github.io/autogen/docs/Use-Cases/enhanced_inference#api-unification"
         )
         if ERROR:
             raise ERROR
@@ -1177,7 +1193,7 @@ class Completion(openai_Completion):
             reset_counter (bool): whether to reset the counter of the number of API calls.
         """
         logger.warning(
-            "logging via Completion.start_logging is deprecated in pyautogen v0.2. "
+            "logging via Completion.start_logging is deprecated in autogen and pyautogen v0.2. "
             "logging via OpenAIWrapper will be added back in a future release."
         )
         if ERROR:

@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import inspect
@@ -6,12 +12,12 @@ import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple, Union
 
-from flaml.automl.logger import logger_formatter
 from pydantic import BaseModel
 
 from autogen.cache import Cache
 from autogen.io.base import IOStream
 from autogen.logger.logger_utils import get_current_ts
+from autogen.oai.client_utils import logging_formatter
 from autogen.oai.openai_utils import OAI_PRICE1K, get_key, is_valid_api_key
 from autogen.runtime_logging import log_chat_completion, log_new_client, log_new_wrapper, logging_enabled
 from autogen.token_count_utils import count_token
@@ -43,52 +49,127 @@ else:
     ERROR = None
 
 try:
+    from cerebras.cloud.sdk import (  # noqa
+        AuthenticationError as cerebras_AuthenticationError,
+        InternalServerError as cerebras_InternalServerError,
+        RateLimitError as cerebras_RateLimitError,
+    )
+
+    from autogen.oai.cerebras import CerebrasClient
+
+    cerebras_import_exception: Optional[ImportError] = None
+except ImportError as e:
+    cerebras_AuthenticationError = cerebras_InternalServerError = cerebras_RateLimitError = Exception
+    cerebras_import_exception = e
+
+try:
+    from google.api_core.exceptions import (  # noqa
+        InternalServerError as gemini_InternalServerError,
+        ResourceExhausted as gemini_ResourceExhausted,
+    )
+
     from autogen.oai.gemini import GeminiClient
 
     gemini_import_exception: Optional[ImportError] = None
 except ImportError as e:
+    gemini_InternalServerError = gemini_ResourceExhausted = Exception
     gemini_import_exception = e
 
 try:
+    from anthropic import (  # noqa
+        InternalServerError as anthorpic_InternalServerError,
+        RateLimitError as anthorpic_RateLimitError,
+    )
+
     from autogen.oai.anthropic import AnthropicClient
 
     anthropic_import_exception: Optional[ImportError] = None
 except ImportError as e:
+    anthorpic_InternalServerError = anthorpic_RateLimitError = Exception
     anthropic_import_exception = e
 
 try:
+    from mistralai.models import (  # noqa
+        HTTPValidationError as mistral_HTTPValidationError,
+        SDKError as mistral_SDKError,
+    )
+
     from autogen.oai.mistral import MistralAIClient
 
     mistral_import_exception: Optional[ImportError] = None
 except ImportError as e:
+    mistral_SDKError = mistral_HTTPValidationError = Exception
     mistral_import_exception = e
 
 try:
+    from together.error import TogetherException as together_TogetherException
+
     from autogen.oai.together import TogetherClient
 
     together_import_exception: Optional[ImportError] = None
 except ImportError as e:
+    together_TogetherException = Exception
     together_import_exception = e
 
 try:
+    from groq import (  # noqa
+        APIConnectionError as groq_APIConnectionError,
+        InternalServerError as groq_InternalServerError,
+        RateLimitError as groq_RateLimitError,
+    )
+
     from autogen.oai.groq import GroqClient
 
     groq_import_exception: Optional[ImportError] = None
 except ImportError as e:
+    groq_InternalServerError = groq_RateLimitError = groq_APIConnectionError = Exception
     groq_import_exception = e
 
 try:
+    from cohere.errors import (  # noqa
+        InternalServerError as cohere_InternalServerError,
+        ServiceUnavailableError as cohere_ServiceUnavailableError,
+        TooManyRequestsError as cohere_TooManyRequestsError,
+    )
+
     from autogen.oai.cohere import CohereClient
 
     cohere_import_exception: Optional[ImportError] = None
 except ImportError as e:
+    cohere_InternalServerError = cohere_TooManyRequestsError = cohere_ServiceUnavailableError = Exception
     cohere_import_exception = e
+
+try:
+    from ollama import (  # noqa
+        RequestError as ollama_RequestError,
+        ResponseError as ollama_ResponseError,
+    )
+
+    from autogen.oai.ollama import OllamaClient
+
+    ollama_import_exception: Optional[ImportError] = None
+except ImportError as e:
+    ollama_RequestError = ollama_ResponseError = Exception
+    ollama_import_exception = e
+
+try:
+    from botocore.exceptions import (  # noqa
+        BotoCoreError as bedrock_BotoCoreError,
+        ClientError as bedrock_ClientError,
+    )
+
+    from autogen.oai.bedrock import BedrockClient
+
+    bedrock_import_exception: Optional[ImportError] = None
+except ImportError as e:
+    bedrock_BotoCoreError = bedrock_ClientError = Exception
+    bedrock_import_exception = e
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
     # Add the console handler.
     _ch = logging.StreamHandler(stream=sys.stdout)
-    _ch.setFormatter(logger_formatter)
+    _ch.setFormatter(logging_formatter)
     logger.addHandler(_ch)
 
 LEGACY_DEFAULT_CACHE_SEED = 41
@@ -454,12 +535,23 @@ class OpenAIWrapper:
                 azure.identity.DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
             )
 
+    def _configure_openai_config_for_bedrock(self, config: Dict[str, Any], openai_config: Dict[str, Any]) -> None:
+        """Update openai_config with AWS credentials from config."""
+        required_keys = ["aws_access_key", "aws_secret_key", "aws_region"]
+        optional_keys = ["aws_session_token", "aws_profile_name"]
+        for key in required_keys:
+            if key in config:
+                openai_config[key] = config[key]
+        for key in optional_keys:
+            if key in config:
+                openai_config[key] = config[key]
+
     def _register_default_client(self, config: Dict[str, Any], openai_config: Dict[str, Any]) -> None:
         """Create a client with the given config to override openai_config,
         after removing extra kwargs.
 
         For Azure models/deployment names there's a convenience modification of model removing dots in
-        the it's value (Azure deploment names can't have dots). I.e. if you have Azure deployment name
+        the it's value (Azure deployment names can't have dots). I.e. if you have Azure deployment name
         "gpt-35-turbo" and define model "gpt-3.5-turbo" in the config the function will remove the dot
         from the name and create a client that connects to "gpt-35-turbo" Azure deployment.
         """
@@ -479,12 +571,19 @@ class OpenAIWrapper:
                 self._configure_azure_openai(config, openai_config)
                 client = AzureOpenAI(**openai_config)
                 self._clients.append(OpenAIClient(client))
+            elif api_type is not None and api_type.startswith("cerebras"):
+                if cerebras_import_exception:
+                    raise ImportError("Please install `cerebras_cloud_sdk` to use Cerebras OpenAI API.")
+                client = CerebrasClient(**openai_config)
+                self._clients.append(client)
             elif api_type is not None and api_type.startswith("google"):
                 if gemini_import_exception:
-                    raise ImportError("Please install `google-generativeai` to use Google OpenAI API.")
+                    raise ImportError("Please install `google-generativeai` and 'vertexai' to use Google's API.")
                 client = GeminiClient(**openai_config)
                 self._clients.append(client)
             elif api_type is not None and api_type.startswith("anthropic"):
+                if "api_key" not in config:
+                    self._configure_openai_config_for_bedrock(config, openai_config)
                 if anthropic_import_exception:
                     raise ImportError("Please install `anthropic` to use Anthropic API.")
                 client = AnthropicClient(**openai_config)
@@ -506,8 +605,19 @@ class OpenAIWrapper:
                 self._clients.append(client)
             elif api_type is not None and api_type.startswith("cohere"):
                 if cohere_import_exception:
-                    raise ImportError("Please install `cohere` to use the Groq API.")
+                    raise ImportError("Please install `cohere` to use the Cohere API.")
                 client = CohereClient(**openai_config)
+                self._clients.append(client)
+            elif api_type is not None and api_type.startswith("ollama"):
+                if ollama_import_exception:
+                    raise ImportError("Please install `ollama` and `fix-busted-json` to use the Ollama API.")
+                client = OllamaClient(**openai_config)
+                self._clients.append(client)
+            elif api_type is not None and api_type.startswith("bedrock"):
+                self._configure_openai_config_for_bedrock(config, openai_config)
+                if bedrock_import_exception:
+                    raise ImportError("Please install `boto3` to use the Amazon Bedrock API.")
+                client = BedrockClient(**openai_config)
                 self._clients.append(client)
             else:
                 client = OpenAI(**openai_config)
@@ -747,6 +857,31 @@ class OpenAIWrapper:
                 logger.debug(f"config {i} failed", exc_info=True)
                 if i == last:
                     raise
+            except (
+                gemini_InternalServerError,
+                gemini_ResourceExhausted,
+                anthorpic_InternalServerError,
+                anthorpic_RateLimitError,
+                mistral_SDKError,
+                mistral_HTTPValidationError,
+                together_TogetherException,
+                groq_InternalServerError,
+                groq_RateLimitError,
+                groq_APIConnectionError,
+                cohere_InternalServerError,
+                cohere_TooManyRequestsError,
+                cohere_ServiceUnavailableError,
+                ollama_RequestError,
+                ollama_ResponseError,
+                bedrock_BotoCoreError,
+                bedrock_ClientError,
+                cerebras_AuthenticationError,
+                cerebras_InternalServerError,
+                cerebras_RateLimitError,
+            ):
+                logger.debug(f"config {i} failed", exc_info=True)
+                if i == last:
+                    raise
             else:
                 # add cost calculation before caching no matter filter is passed or not
                 if price is not None:
@@ -795,7 +930,7 @@ class OpenAIWrapper:
         n_output_tokens = response.usage.completion_tokens if response.usage is not None else 0  # type: ignore [union-attr]
         if n_output_tokens is None:
             n_output_tokens = 0
-        return n_input_tokens * price_1k[0] + n_output_tokens * price_1k[1]
+        return (n_input_tokens * price_1k[0] + n_output_tokens * price_1k[1]) / 1000
 
     @staticmethod
     def _update_dict_from_chunk(chunk: BaseModel, d: Dict[str, Any], field: str) -> int:

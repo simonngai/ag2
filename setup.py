@@ -1,5 +1,12 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 import os
 import platform
+import sys
 
 import setuptools
 
@@ -42,7 +49,7 @@ jupyter_executor = [
 
 retrieve_chat = [
     "protobuf==4.25.3",
-    "chromadb",
+    "chromadb==0.5.3",
     "sentence_transformers",
     "pypdf",
     "ipython",
@@ -51,6 +58,10 @@ retrieve_chat = [
 ]
 
 retrieve_chat_pgvector = [*retrieve_chat, "pgvector>=0.2.5"]
+
+graph_rag_falkor_db = [
+    "graphrag_sdk",
+]
 
 if current_os in ["Windows", "Darwin"]:
     retrieve_chat_pgvector.extend(["psycopg[binary]>=3.1.18"])
@@ -72,7 +83,9 @@ extra_require = {
     "mathchat": ["sympy", "pydantic==1.10.9", "wolframalpha"],
     "retrievechat": retrieve_chat,
     "retrievechat-pgvector": retrieve_chat_pgvector,
+    "retrievechat-mongodb": [*retrieve_chat, "pymongo>=4.0.0"],
     "retrievechat-qdrant": [*retrieve_chat, "qdrant_client", "fastembed>=0.3.1"],
+    "graph_rag_falkor_db": graph_rag_falkor_db,
     "autobuild": ["chromadb", "sentence-transformers", "huggingface-hub", "pysqlite3"],
     "teachable": ["chromadb"],
     "lmm": ["replicate", "pillow"],
@@ -87,27 +100,40 @@ extra_require = {
     "types": ["mypy==1.9.0", "pytest>=6.1.1,<8"] + jupyter_executor,
     "long-context": ["llmlingua<0.3"],
     "anthropic": ["anthropic>=0.23.1"],
-    "mistral": ["mistralai>=0.2.0"],
+    "cerebras": ["cerebras_cloud_sdk>=1.0.0"],
+    "mistral": ["mistralai>=1.0.1"],
     "groq": ["groq>=0.9.0"],
     "cohere": ["cohere>=5.5.8"],
+    "ollama": ["ollama>=0.3.3", "fix_busted_json>=0.0.18"],
+    "bedrock": ["boto3>=1.34.149"],
 }
 
+
+if "--name" in sys.argv:
+    index = sys.argv.index("--name")
+    sys.argv.pop(index)  # Removes --name
+    package_name = sys.argv.pop(index)  # Removes the value after --name
+else:
+    package_name = "autogen"
+
+
 setuptools.setup(
-    name="pyautogen",
+    name=package_name,
     version=__version__,
-    author="AutoGen",
+    author="Chi Wang & Qingyun Wu",
     author_email="auto-gen@outlook.com",
-    description="Enabling Next-Gen LLM Applications via Multi-Agent Conversation Framework",
+    description="A programming framework for agentic AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/microsoft/autogen",
+    url="https://github.com/autogenhub/autogen",
     packages=setuptools.find_packages(include=["autogen*"], exclude=["test"]),
     install_requires=install_requires,
     extras_require=extra_require,
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
+    license="Apache Software License 2.0",
     python_requires=">=3.8,<3.13",
 )

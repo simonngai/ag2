@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 #!/usr/bin/env python3 -m pytest
 
 import os
@@ -10,6 +16,7 @@ from typing_extensions import Annotated
 
 import autogen
 from autogen import AssistantAgent, GroupChat, GroupChatManager, UserProxyAgent, filter_config, initiate_chats
+from autogen.agentchat.chat import _post_process_carryover_item
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from conftest import reason, skip_openai  # noqa: E402
@@ -620,6 +627,15 @@ def test_udf_message_in_chats():
     print(chat_results[1].summary, chat_results[1].cost)
 
 
+def test_post_process_carryover_item():
+    gemini_carryover_item = {"content": "How can I help you?", "role": "model"}
+    assert (
+        _post_process_carryover_item(gemini_carryover_item) == gemini_carryover_item["content"]
+    ), "Incorrect carryover postprocessing"
+    carryover_item = "How can I help you?"
+    assert _post_process_carryover_item(carryover_item) == carryover_item, "Incorrect carryover postprocessing"
+
+
 if __name__ == "__main__":
     test_chats()
     # test_chats_general()
@@ -628,3 +644,4 @@ if __name__ == "__main__":
     # test_chats_w_func()
     # test_chat_messages_for_summary()
     # test_udf_message_in_chats()
+    test_post_process_carryover_item()

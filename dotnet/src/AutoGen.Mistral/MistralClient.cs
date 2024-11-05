@@ -1,4 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // MistralClient.cs
 
 using System;
@@ -49,7 +55,7 @@ public class MistralClient : IDisposable
         var response = await HttpRequestRaw(HttpMethod.Post, chatCompletionRequest, streaming: true);
         using var stream = await response.Content.ReadAsStreamAsync();
         using StreamReader reader = new StreamReader(stream);
-        string line;
+        string? line = null;
 
         SseEvent currentEvent = new SseEvent();
         while ((line = await reader.ReadLineAsync()) != null)
@@ -67,13 +73,13 @@ public class MistralClient : IDisposable
                 else if (currentEvent.EventType == null)
                 {
                     var res = await JsonSerializer.DeserializeAsync<ChatCompletionResponse>(
-                        new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data))) ?? throw new Exception("Failed to deserialize response");
+                        new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data ?? string.Empty))) ?? throw new Exception("Failed to deserialize response");
                     yield return res;
                 }
                 else if (currentEvent.EventType != null)
                 {
                     var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(
-                        new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)));
+                        new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data ?? string.Empty)));
                     throw new Exception(res?.Error.Message);
                 }
 

@@ -1,10 +1,17 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Example09_LMStudio_FunctionCall.cs
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoGen.Core;
 using AutoGen.LMStudio;
+using AutoGen.OpenAI.V1.Extension;
 using Azure.AI.OpenAI;
 
 namespace AutoGen.BasicSample;
@@ -69,8 +76,8 @@ public partial class Example09_LMStudio_FunctionCall
         // And ask agent to response in function call object format using few-shot example
         object[] functionList =
             [
-                SerializeFunctionDefinition(instance.GetWeatherFunction),
-                SerializeFunctionDefinition(instance.GoogleSearchFunction)
+                SerializeFunctionDefinition(instance.GetWeatherFunctionContract.ToOpenAIFunctionDefinition()),
+                SerializeFunctionDefinition(instance.GetWeatherFunctionContract.ToOpenAIFunctionDefinition())
             ];
         var functionListString = JsonSerializer.Serialize(functionList, new JsonSerializerOptions { WriteIndented = true });
         var lmAgent = new LMStudioAgent(
@@ -98,12 +105,12 @@ You have access to the following functions. Use them if required:
                     {
                         var arguments = JsonSerializer.Serialize(functionCall.Arguments);
                         // invoke function wrapper
-                        if (functionCall.Name == instance.GetWeatherFunction.Name)
+                        if (functionCall.Name == instance.GetWeatherFunctionContract.Name)
                         {
                             var result = await instance.GetWeatherWrapper(arguments);
                             return new TextMessage(Role.Assistant, result);
                         }
-                        else if (functionCall.Name == instance.GoogleSearchFunction.Name)
+                        else if (functionCall.Name == instance.GetWeatherFunctionContract.Name)
                         {
                             var result = await instance.GoogleSearchWrapper(arguments);
                             return new TextMessage(Role.Assistant, result);
@@ -129,7 +136,8 @@ You have access to the following functions. Use them if required:
 
         await userProxyAgent.SendAsync(
             receiver: lmAgent,
-            "Search the names of the five largest stocks in the US by market cap ");
+            "Search the names of the five largest stocks in the US by market cap ")
+            .ToArrayAsync();
         #endregion lmstudio_function_call_example
     }
 }

@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 import copy
 import sys
 from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
@@ -53,13 +59,16 @@ class MessageHistoryLimiter:
     It trims the conversation history by removing older messages, retaining only the most recent messages.
     """
 
-    def __init__(self, max_messages: Optional[int] = None):
+    def __init__(self, max_messages: Optional[int] = None, keep_first_message: bool = False):
         """
         Args:
             max_messages Optional[int]: Maximum number of messages to keep in the context. Must be greater than 0 if not None.
+            keep_first_message bool: Whether to keep the original first message in the conversation history.
+                Defaults to False.
         """
         self._validate_max_messages(max_messages)
         self._max_messages = max_messages
+        self._keep_first_message = keep_first_message
 
     def apply_transform(self, messages: List[Dict]) -> List[Dict]:
         """Truncates the conversation history to the specified maximum number of messages.
@@ -75,10 +84,31 @@ class MessageHistoryLimiter:
             List[Dict]: A new list containing the most recent messages up to the specified maximum.
         """
 
-        if self._max_messages is None:
+        if self._max_messages is None or len(messages) <= self._max_messages:
             return messages
 
-        return messages[-self._max_messages :]
+        truncated_messages = []
+        remaining_count = self._max_messages
+
+        # Start with the first message if we need to keep it
+        if self._keep_first_message:
+            truncated_messages = [messages[0]]
+            remaining_count -= 1
+
+        # Loop through messages in reverse
+        for i in range(len(messages) - 1, 0, -1):
+            if remaining_count > 1:
+                truncated_messages.insert(1 if self._keep_first_message else 0, messages[i])
+            if remaining_count == 1:
+                # If there's only 1 slot left and it's a 'tools' message, ignore it.
+                if messages[i].get("role") != "tool":
+                    truncated_messages.insert(1, messages[i])
+
+            remaining_count -= 1
+            if remaining_count == 0:
+                break
+
+        return truncated_messages
 
     def get_logs(self, pre_transform_messages: List[Dict], post_transform_messages: List[Dict]) -> Tuple[str, bool]:
         pre_transform_messages_len = len(pre_transform_messages)
@@ -295,7 +325,7 @@ class TextMessageCompressor:
         text_compressor: Optional[TextCompressor] = None,
         min_tokens: Optional[int] = None,
         compression_params: Dict = dict(),
-        cache: Optional[AbstractCache] = Cache.disk(),
+        cache: Optional[AbstractCache] = None,
         filter_dict: Optional[Dict] = None,
         exclude_filter: bool = True,
     ):
@@ -325,7 +355,11 @@ class TextMessageCompressor:
         self._compression_args = compression_params
         self._filter_dict = filter_dict
         self._exclude_filter = exclude_filter
-        self._cache = cache
+
+        if cache is None:
+            self._cache = Cache.disk()
+        else:
+            self._cache = cache
 
         # Optimizing savings calculations to optimize log generation
         self._recent_tokens_savings = 0
@@ -421,3 +455,111 @@ class TextMessageCompressor:
     def _validate_min_tokens(self, min_tokens: Optional[int]):
         if min_tokens is not None and min_tokens <= 0:
             raise ValueError("min_tokens must be greater than 0 or None")
+
+
+class TextMessageContentName:
+    """A transform for including the agent's name in the content of a message.
+
+    How to create and apply the transform:
+    # Imports
+    from autogen.agentchat.contrib.capabilities import transform_messages, transforms
+
+    # Create Transform
+    name_transform = transforms.TextMessageContentName(position="start", format_string="'{name}' said:\n")
+
+    # Create the TransformMessages
+    context_handling = transform_messages.TransformMessages(
+                transforms=[
+                    name_transform
+                ]
+            )
+
+    # Add it to an agent so when they run inference it will apply to the messages
+    context_handling.add_to_agent(my_agent)
+    """
+
+    def __init__(
+        self,
+        position: str = "start",
+        format_string: str = "{name}:\n",
+        deduplicate: bool = True,
+        filter_dict: Optional[Dict] = None,
+        exclude_filter: bool = True,
+    ):
+        """
+        Args:
+            position (str): The position to add the name to the content. The possible options are 'start' or 'end'. Defaults to 'start'.
+            format_string (str): The f-string to format the message name with. Use '{name}' as a placeholder for the agent's name. Defaults to '{name}:\n' and must contain '{name}'.
+            deduplicate (bool): Whether to deduplicate the formatted string so it doesn't appear twice (sometimes the LLM will add it to new messages itself). Defaults to True.
+            filter_dict (None or dict): A dictionary to filter out messages that you want/don't want to compress.
+                If None, no filters will be applied.
+            exclude_filter (bool): If exclude filter is True (the default value), messages that match the filter will be
+                excluded from compression. If False, messages that match the filter will be compressed.
+        """
+
+        assert isinstance(position, str) and position in ["start", "end"]
+        assert isinstance(format_string, str) and "{name}" in format_string
+        assert isinstance(deduplicate, bool) and deduplicate is not None
+
+        self._position = position
+        self._format_string = format_string
+        self._deduplicate = deduplicate
+        self._filter_dict = filter_dict
+        self._exclude_filter = exclude_filter
+
+        # Track the number of messages changed for logging
+        self._messages_changed = 0
+
+    def apply_transform(self, messages: List[Dict]) -> List[Dict]:
+        """Applies the name change to the message based on the position and format string.
+
+        Args:
+            messages (List[Dict]): A list of message dictionaries.
+
+        Returns:
+            List[Dict]: A list of dictionaries with the message content updated with names.
+        """
+        # Make sure there is at least one message
+        if not messages:
+            return messages
+
+        messages_changed = 0
+        processed_messages = copy.deepcopy(messages)
+        for message in processed_messages:
+            # Some messages may not have content.
+            if not transforms_util.is_content_right_type(
+                message.get("content")
+            ) or not transforms_util.is_content_right_type(message.get("name")):
+                continue
+
+            if not transforms_util.should_transform_message(message, self._filter_dict, self._exclude_filter):
+                continue
+
+            if transforms_util.is_content_text_empty(message["content"]) or transforms_util.is_content_text_empty(
+                message["name"]
+            ):
+                continue
+
+            # Get and format the name in the content
+            content = message["content"]
+            formatted_name = self._format_string.format(name=message["name"])
+
+            if self._position == "start":
+                if not self._deduplicate or not content.startswith(formatted_name):
+                    message["content"] = f"{formatted_name}{content}"
+
+                    messages_changed += 1
+            else:
+                if not self._deduplicate or not content.endswith(formatted_name):
+                    message["content"] = f"{content}{formatted_name}"
+
+                    messages_changed += 1
+
+        self._messages_changed = messages_changed
+        return processed_messages
+
+    def get_logs(self, pre_transform_messages: List[Dict], post_transform_messages: List[Dict]) -> Tuple[str, bool]:
+        if self._messages_changed > 0:
+            return f"{self._messages_changed} message(s) changed to incorporate name.", True
+        else:
+            return "No messages changed to incorporate name.", False

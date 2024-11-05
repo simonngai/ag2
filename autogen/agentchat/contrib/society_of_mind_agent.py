@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 # ruff: noqa: E722
 import copy
 import traceback
@@ -39,6 +45,7 @@ class SocietyOfMindAgent(ConversableAgent):
         code_execution_config: Union[Dict, Literal[False]] = False,
         llm_config: Optional[Union[Dict, Literal[False]]] = False,
         default_auto_reply: Optional[Union[str, Dict, None]] = "",
+        **kwargs,
     ):
         super().__init__(
             name=name,
@@ -50,6 +57,7 @@ class SocietyOfMindAgent(ConversableAgent):
             code_execution_config=code_execution_config,
             llm_config=llm_config,
             default_auto_reply=default_auto_reply,
+            **kwargs,
         )
 
         self.update_chat_manager(chat_manager)
@@ -123,7 +131,7 @@ class SocietyOfMindAgent(ConversableAgent):
             }
         )
 
-        response = self.client.create(context=None, messages=_messages, cache=self.client_cache)
+        response = self.client.create(context=None, messages=_messages, cache=self.client_cache, agent=self.name)
         extracted_response = self.client.extract_text_or_completion_object(response)[0]
         if not isinstance(extracted_response, str):
             return str(extracted_response.model_dump(mode="dict"))

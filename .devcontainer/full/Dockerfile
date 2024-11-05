@@ -11,19 +11,19 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup a non-root user 'autogen' with sudo access
-RUN adduser --disabled-password --gecos '' autogen
+RUN adduser --home /home/autogenhub --disabled-password --gecos '' autogen
 RUN adduser autogen sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 USER autogen
-WORKDIR /home/autogen
+WORKDIR /home/autogenhub
 
 # Set environment variable if needed
 # ENV OPENAI_API_KEY="{OpenAI-API-Key}"
 
 # Install Python packages
 RUN pip install --upgrade pip
-RUN pip install pyautogen[teachable,lmm,retrievechat,mathchat,blendsearch] autogenra
-RUN pip install numpy pandas matplotlib seaborn scikit-learn requests urllib3 nltk pillow pytest beautifulsoup4
+RUN pip install autogen[teachable,lmm,retrievechat,mathchat,blendsearch] autogenra
+RUN pip install numpy pandas matplotlib seaborn scikit-learn requests urllib3 nltk pillow pytest beautifulsoup4  pytest-xdist pytest-cov
 
 # Expose port
 EXPOSE 8081

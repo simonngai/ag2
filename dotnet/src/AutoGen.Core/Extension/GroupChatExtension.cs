@@ -1,9 +1,17 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // GroupChatExtension.cs
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace AutoGen.Core;
 
@@ -21,6 +29,46 @@ public static class GroupChatExtension
         };
 
         groupChat.SendIntroduction(msg);
+    }
+
+    /// <summary>
+    /// Send messages to a <see cref="IGroupChat"/> and return new messages from the group chat.
+    /// </summary>
+    /// <param name="groupChat"></param>
+    /// <param name="chatHistory"></param>
+    /// <param name="maxRound"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public static async IAsyncEnumerable<IMessage> SendAsync(
+        this IGroupChat groupChat,
+        IEnumerable<IMessage> chatHistory,
+        int maxRound = 10,
+        [EnumeratorCancellation]
+        CancellationToken cancellationToken = default)
+    {
+        while (maxRound-- > 0)
+        {
+            var messages = await groupChat.CallAsync(chatHistory, maxRound: 1, cancellationToken);
+
+            // if no new messages, break the loop
+            if (messages.Count() == chatHistory.Count())
+            {
+                yield break;
+            }
+
+            var lastMessage = messages.Last();
+
+            yield return lastMessage;
+            if (lastMessage.IsGroupChatTerminateMessage())
+            {
+                yield break;
+            }
+
+            // messages will contain the complete chat history, include initalize messages
+            // but we only need to add the last message to the chat history
+            // fix #3268
+            chatHistory = chatHistory.Append(lastMessage);
+        }
     }
 
     /// <summary>
@@ -78,6 +126,7 @@ public static class GroupChatExtension
         return message.GetContent()?.Contains(CLEAR_MESSAGES) ?? false;
     }
 
+    [Obsolete]
     public static IEnumerable<IMessage> ProcessConversationForAgent(
         this IGroupChat groupChat,
         IEnumerable<IMessage> initialMessages,
@@ -100,8 +149,7 @@ public static class GroupChatExtension
             var msg = @$"From {x.From}:
 {x.GetContent()}
 <eof_msg>
-round # 
-                {i}";
+round # {i}";
 
             return new TextMessage(Role.User, content: msg);
         });

@@ -1,9 +1,16 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 #!/usr/bin/env python3 -m pytest
 
 import builtins
 import io
 import json
 import logging
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 from unittest import TestCase, mock
 
@@ -12,6 +19,7 @@ from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 import autogen
 from autogen import Agent, AssistantAgent, GroupChat, GroupChatManager
+from autogen.agentchat.contrib.capabilities import transform_messages, transforms
 from autogen.exception_utils import AgentNameConflict, UndefinedNextAgent
 
 
@@ -724,7 +732,7 @@ def test_clear_agents_history():
     agent1_history = list(agent1._oai_messages.values())[0]
     agent2_history = list(agent2._oai_messages.values())[0]
     assert agent1_history == [
-        {"content": "hello", "role": "assistant"},
+        {"content": "hello", "role": "assistant", "name": "alice"},
         {"content": "This is bob speaking.", "name": "bob", "role": "user"},
         {"content": "How you doing?", "name": "sam", "role": "user"},
     ]
@@ -745,7 +753,7 @@ def test_clear_agents_history():
         {"content": "How you doing?", "name": "sam", "role": "user"},
     ]
     assert agent2_history == [
-        {"content": "This is bob speaking.", "role": "assistant"},
+        {"content": "This is bob speaking.", "role": "assistant", "name": "bob"},
         {"content": "How you doing?", "name": "sam", "role": "user"},
     ]
     assert groupchat.messages == [
@@ -759,12 +767,12 @@ def test_clear_agents_history():
     agent1_history = list(agent1._oai_messages.values())[0]
     agent2_history = list(agent2._oai_messages.values())[0]
     assert agent1_history == [
-        {"content": "hello", "role": "assistant"},
+        {"content": "hello", "role": "assistant", "name": "alice"},
         {"content": "This is bob speaking.", "name": "bob", "role": "user"},
         {"content": "How you doing?", "name": "sam", "role": "user"},
     ]
     assert agent2_history == [
-        {"content": "This is bob speaking.", "role": "assistant"},
+        {"content": "This is bob speaking.", "role": "assistant", "name": "bob"},
         {"content": "How you doing?", "name": "sam", "role": "user"},
     ]
     assert groupchat.messages == [
@@ -822,6 +830,7 @@ def test_clear_agents_history():
             "content": "example tool response",
             "tool_responses": [{"tool_call_id": "call_emulated", "role": "tool", "content": "example tool response"}],
             "role": "tool",
+            "name": "alice",
         },
     ]
 
@@ -1218,7 +1227,7 @@ def test_role_for_select_speaker_messages():
     # into a message attribute called 'override_role'. This is evaluated in Conversable Agent's _append_oai_message function
     # e.g.: message={'content':self.select_speaker_prompt(agents),'override_role':self.role_for_select_speaker_messages},
     message = {"content": "A prompt goes here.", "override_role": groupchat.role_for_select_speaker_messages}
-    checking_agent._append_oai_message(message, "assistant", speaker_selection_agent)
+    checking_agent._append_oai_message(message, "assistant", speaker_selection_agent, is_sending=True)
 
     # Test default is "system"
     assert len(checking_agent.chat_messages) == 1
@@ -1227,7 +1236,7 @@ def test_role_for_select_speaker_messages():
     # Test as "user"
     groupchat.role_for_select_speaker_messages = "user"
     message = {"content": "A prompt goes here.", "override_role": groupchat.role_for_select_speaker_messages}
-    checking_agent._append_oai_message(message, "assistant", speaker_selection_agent)
+    checking_agent._append_oai_message(message, "assistant", speaker_selection_agent, is_sending=True)
 
     assert len(checking_agent.chat_messages) == 1
     assert checking_agent.chat_messages[speaker_selection_agent][-1]["role"] == "user"
@@ -1235,7 +1244,7 @@ def test_role_for_select_speaker_messages():
     # Test as something unusual
     groupchat.role_for_select_speaker_messages = "SockS"
     message = {"content": "A prompt goes here.", "override_role": groupchat.role_for_select_speaker_messages}
-    checking_agent._append_oai_message(message, "assistant", speaker_selection_agent)
+    checking_agent._append_oai_message(message, "assistant", speaker_selection_agent, is_sending=True)
 
     assert len(checking_agent.chat_messages) == 1
     assert checking_agent.chat_messages[speaker_selection_agent][-1]["role"] == "SockS"
@@ -1646,6 +1655,7 @@ def test_speaker_selection_validate_speaker_name():
         True,
         {
             "content": groupchat.select_speaker_auto_multiple_template.format(agentlist=agent_list_string),
+            "name": "checking_agent",
             "override_role": groupchat.role_for_select_speaker_messages,
         },
     )
@@ -1692,6 +1702,7 @@ def test_speaker_selection_validate_speaker_name():
         True,
         {
             "content": groupchat.select_speaker_auto_none_template.format(agentlist=agent_list_string),
+            "name": "checking_agent",
             "override_role": groupchat.role_for_select_speaker_messages,
         },
     )
@@ -1761,6 +1772,7 @@ def test_select_speaker_auto_messages():
         True,
         {
             "content": custom_multiple_names_msg.replace("{agentlist}", "['Alice', 'Bob']"),
+            "name": "checking_agent",
             "override_role": groupchat.role_for_select_speaker_messages,
         },
     )
@@ -1770,6 +1782,7 @@ def test_select_speaker_auto_messages():
         True,
         {
             "content": custom_no_names_msg.replace("{agentlist}", "['Alice', 'Bob']"),
+            "name": "checking_agent",
             "override_role": groupchat.role_for_select_speaker_messages,
         },
     )
@@ -2056,6 +2069,145 @@ def test_manager_resume_messages():
         return_agent, return_message = manager.resume(messages="Let's get this conversation started.")
 
 
+def test_custom_model_client():
+    class CustomModelClient:
+        def __init__(self, config, **kwargs):
+            print(f"CustomModelClient config: {config}")
+
+        def create(self, params):
+            num_of_responses = params.get("n", 1)
+
+            response = SimpleNamespace()
+            response.choices = []
+            response.model = "test_model_name"
+
+            for _ in range(num_of_responses):
+                text = "this is a dummy text response"
+                choice = SimpleNamespace()
+                choice.message = SimpleNamespace()
+                choice.message.content = text
+                choice.message.function_call = None
+                response.choices.append(choice)
+            return response
+
+        def message_retrieval(self, response):
+            choices = response.choices
+            return [choice.message.content for choice in choices]
+
+        def cost(self, response) -> float:
+            response.cost = 0
+            return 0
+
+        @staticmethod
+        def get_usage(response):
+            return {}
+
+    llm_config = {"config_list": [{"model": "test_model_name", "model_client_cls": "CustomModelClient"}]}
+
+    group_chat = autogen.GroupChat(
+        agents=[],
+        messages=[],
+        max_round=3,
+        select_speaker_auto_llm_config=llm_config,
+        select_speaker_auto_model_client_cls=CustomModelClient,
+    )
+
+    checking_agent, speaker_selection_agent = group_chat._create_internal_agents(
+        agents=[], messages=[], max_attempts=3, validate_speaker_name=(True, "test")
+    )
+
+    # Check that the custom model client is assigned to the speaker selection agent
+    assert isinstance(speaker_selection_agent.client._clients[0], CustomModelClient)
+
+    # Check that the LLM Config is assigned
+    assert speaker_selection_agent.client._config_list == llm_config["config_list"]
+
+
+def test_select_speaker_transform_messages():
+    """Tests adding transform messages to a GroupChat for speaker selection when in 'auto' mode"""
+
+    # Test adding a TransformMessages to a group chat
+    test_add_transforms = transform_messages.TransformMessages(
+        transforms=[
+            transforms.MessageHistoryLimiter(max_messages=10),
+            transforms.MessageTokenLimiter(max_tokens=3000, max_tokens_per_message=500, min_tokens=300),
+        ]
+    )
+
+    coder = AssistantAgent(name="Coder", llm_config=None)
+    groupchat = GroupChat(messages=[], agents=[coder], select_speaker_transform_messages=test_add_transforms)
+
+    # Ensure the transform have been added to the GroupChat
+    assert groupchat._speaker_selection_transforms == test_add_transforms
+
+    # Attempt to add a non MessageTransforms object, such as a list of transforms
+    with pytest.raises(ValueError, match="select_speaker_transform_messages must be None or MessageTransforms."):
+        groupchat = GroupChat(
+            messages=[],
+            agents=[coder],
+            select_speaker_transform_messages=[transforms.MessageHistoryLimiter(max_messages=10)],
+        )
+
+    # Ensure if we don't pass any transforms in, none are on the GroupChat
+    groupchat_missing = GroupChat(messages=[], agents=[coder])
+
+    assert groupchat_missing._speaker_selection_transforms is None
+
+    # Ensure we can pass in None
+    groupchat_none = GroupChat(
+        messages=[],
+        agents=[coder],
+        select_speaker_transform_messages=None,
+    )
+
+    assert groupchat_none._speaker_selection_transforms is None
+
+
+def test_manager_resume_message_assignment():
+    """Tests that the messages passed in are assigned to agents correctly"""
+
+    # Setup
+    agent_a = AssistantAgent(name="Agent_A", llm_config=None)
+    agent_b = AssistantAgent(name="Agent_B", llm_config=None)
+    agent_c = AssistantAgent(name="Agent_C", llm_config=None)
+    groupchat = GroupChat(messages=[], agents=[agent_a, agent_b, agent_c])
+    manager = GroupChatManager(groupchat)
+
+    # Messages representing the previous state (based on agent_a where role will be assistant)
+    prev_messages = [
+        {
+            "content": "Let's build a new app!",
+            "name": "Agent_A",
+            "role": "assistant",
+        },
+        {
+            "content": "This is Agent C's message",
+            "name": "Agent_C",
+            "role": "user",
+        },
+        {
+            "content": "This is Agent A's message",
+            "name": "Agent_A",
+            "role": "assistant",
+        },
+        {
+            "content": "This is Agent B's message",
+            "name": "Agent_B",
+            "role": "user",
+        },
+        {
+            "content": "This is Agent C's message",
+            "name": "Agent_C",
+            "role": "user",
+        },
+    ]
+
+    return_agent, return_message = manager.resume(messages=prev_messages)
+
+    # Compare agent_a's message state to previous messages (excludes last message)
+    assert list(agent_a.chat_messages.values())[0] == prev_messages[:-1]
+
+
 if __name__ == "__main__":
     # test_func_call_groupchat()
     # test_broadcast()
@@ -2081,7 +2233,10 @@ if __name__ == "__main__":
     # test_select_speaker_auto_messages()
     # test_manager_messages_to_string()
     # test_manager_messages_from_string()
-    test_manager_resume_functions()
+    # test_manager_resume_functions()
     # test_manager_resume_returns()
     # test_manager_resume_messages()
+    # test_select_speaker_transform_messages()
+    # test_manager_resume_message_assignment()
+    test_custom_model_client()
     pass

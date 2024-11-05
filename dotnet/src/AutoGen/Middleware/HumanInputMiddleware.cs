@@ -1,4 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // HumanInputMiddleware.cs
 
 using System;
@@ -18,7 +24,7 @@ public class HumanInputMiddleware : IMiddleware
     private readonly string prompt;
     private readonly string exitKeyword;
     private Func<IEnumerable<IMessage>, CancellationToken, Task<bool>> isTermination;
-    private Func<string> getInput = Console.ReadLine;
+    private Func<string?> getInput = Console.ReadLine;
     private Action<string> writeLine = Console.WriteLine;
     public string? Name => nameof(HumanInputMiddleware);
 
@@ -27,7 +33,7 @@ public class HumanInputMiddleware : IMiddleware
         string exitKeyword = "exit",
         HumanInputMode mode = HumanInputMode.AUTO,
         Func<IEnumerable<IMessage>, CancellationToken, Task<bool>>? isTermination = null,
-        Func<string>? getInput = null,
+        Func<string?>? getInput = null,
         Action<string>? writeLine = null)
     {
         this.prompt = prompt;
@@ -56,6 +62,8 @@ public class HumanInputMiddleware : IMiddleware
                 return new TextMessage(Role.Assistant, GroupChatExtension.TERMINATE, agent.Name);
             }
 
+            input ??= string.Empty;
+
             return new TextMessage(Role.Assistant, input, agent.Name);
         }
 
@@ -74,6 +82,8 @@ public class HumanInputMiddleware : IMiddleware
                 return new TextMessage(Role.Assistant, GroupChatExtension.TERMINATE, agent.Name);
             }
 
+            input ??= string.Empty;
+
             return new TextMessage(Role.Assistant, input, agent.Name);
         }
 
@@ -85,7 +95,7 @@ public class HumanInputMiddleware : IMiddleware
         return messages?.Last().IsGroupChatTerminateMessage() is true;
     }
 
-    private string GetInput()
+    private string? GetInput()
     {
         return Console.ReadLine();
     }

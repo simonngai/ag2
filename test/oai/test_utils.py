@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 #!/usr/bin/env python3 -m pytest
 
 import json
@@ -55,8 +61,8 @@ JSON_SAMPLE = """
     {
         "model": "gpt-35-turbo-v0301",
         "tags": ["gpt-3.5-turbo", "gpt35_turbo"],
-        "api_key": "111113fc7e8a46419bfac511bb301111",
-        "base_url": "https://1111.openai.azure.com",
+        "api_key": "Your Azure OAI API Key",
+        "base_url": "https://deployment_name.openai.azure.com",
         "api_type": "azure",
         "api_version": "2024-02-01"
     },
@@ -421,15 +427,22 @@ def test_is_valid_api_key():
     assert not is_valid_api_key("sk-asajsdjsd2")
     assert not is_valid_api_key("FooBar")
     assert not is_valid_api_key("sk-asajsdjsd22372%23kjdfdfdf2329ffUUDSDS")
-    assert is_valid_api_key("sk-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS")
+    assert is_valid_api_key(
+        "sk-1b7n_YEvn7mmiUqkipH-JXk7DvqYoacDoe6Ae8v212T3BlbkFJWFRrGd3ZHN9GpZWX9Zx13gLolZ3NqcMFvb7ov5tzeA"
+    )  # correct format, not real
+    assert is_valid_api_key(
+        "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"
+    )  # correct format, not real
     assert is_valid_api_key("sk-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS1212121221212sssXX")
     assert is_valid_api_key("sk-proj-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
+    assert is_valid_api_key("sk-None-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
+    assert is_valid_api_key("sk-svcaat-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
     assert is_valid_api_key("sk-0-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
     assert is_valid_api_key("sk-aut0gen-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
     assert is_valid_api_key("sk-aut0-gen-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
     assert is_valid_api_key("sk-aut0--gen-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
-    assert not is_valid_api_key("sk-aut0-gen--asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
-    assert not is_valid_api_key("sk--aut0-gen-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
+    assert is_valid_api_key("sk-aut0-gen--asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
+    assert is_valid_api_key("sk--aut0-gen-asajsdjsd22372X23kjdfdfdf2329ffUUDSDS12121212212")
     assert is_valid_api_key(MOCK_OPEN_AI_API_KEY)
 
 

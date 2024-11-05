@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 #!/usr/bin/env python3 -m pytest
 
 import inspect
@@ -208,6 +214,7 @@ def test_multi_tool_call():
         def __init__(self, name):
             self._name = name
             self.received = []
+            self.silent = False
 
         @property
         def name(self):
@@ -303,6 +310,7 @@ async def test_async_multi_tool_call():
         def __init__(self, name):
             self._name = name
             self.received = []
+            self.silent = False
 
         @property
         def name(self):

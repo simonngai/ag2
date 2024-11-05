@@ -1,5 +1,12 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 """Utilities for client classes"""
 
+import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -152,3 +159,9 @@ def should_hide_tools(messages: List[Dict[str, Any]], tools: List[Dict[str, Any]
         raise TypeError(
             f"hide_tools_param is not a valid value ['if_all_run','if_any_run','never'], got '{hide_tools_param}'"
         )
+
+
+# Logging format (originally from FLAML)
+logging_formatter = logging.Formatter(
+    "[%(name)s: %(asctime)s] {%(lineno)d} %(levelname)s - %(message)s", "%m-%d %H:%M:%S"
+)

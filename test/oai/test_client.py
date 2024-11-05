@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 #!/usr/bin/env python3 -m pytest
 
 import os
@@ -140,10 +146,12 @@ def test_customized_cost():
         env_or_file=OAI_CONFIG_LIST, file_location=KEY_LOC, filter_dict={"tags": ["gpt-3.5-turbo-instruct"]}
     )
     for config in config_list:
-        config.update({"price": [1, 1]})
+        config.update({"price": [1000, 1000]})
     client = OpenAIWrapper(config_list=config_list, cache_seed=None)
     response = client.create(prompt="1+3=")
-    assert response.cost >= 4, "Due to customized pricing, cost should be greater than 4"
+    assert (
+        response.cost >= 4
+    ), f"Due to customized pricing, cost should be > 4. Message: {response.choices[0].message.content}"
 
 
 @pytest.mark.skipif(skip, reason="openai>=1 not installed")

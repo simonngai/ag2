@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogen-ai
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Original portions of this file are derived from https://github.com/microsoft/autogen under the MIT License.
+# SPDX-License-Identifier: MIT
 import logging
 import os
 import re
@@ -221,7 +227,12 @@ $functions"""
             cmd = [py_executable, "-m", "pip", "install"] + required_packages
             try:
                 result = subprocess.run(
-                    cmd, cwd=self._work_dir, capture_output=True, text=True, timeout=float(self._timeout)
+                    cmd,
+                    cwd=self._work_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=float(self._timeout),
+                    encoding="utf-8",
                 )
             except subprocess.TimeoutExpired as e:
                 raise ValueError("Pip install timed out") from e
@@ -303,7 +314,13 @@ $functions"""
 
             try:
                 result = subprocess.run(
-                    cmd, cwd=self._work_dir, capture_output=True, text=True, timeout=float(self._timeout), env=env
+                    cmd,
+                    cwd=self._work_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=float(self._timeout),
+                    env=env,
+                    encoding="utf-8",
                 )
             except subprocess.TimeoutExpired:
                 logs_all += "\n" + TIMEOUT_MSG

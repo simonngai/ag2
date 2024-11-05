@@ -1,4 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // SingleAgentTest.cs
 
 using System;
@@ -7,7 +13,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoGen.LMStudio;
-using AutoGen.OpenAI;
+using AutoGen.OpenAI.V1;
+using AutoGen.OpenAI.V1.Extension;
 using Azure.AI.OpenAI;
 using FluentAssertions;
 using Xunit;
@@ -64,13 +71,13 @@ namespace AutoGen.Tests
                 systemMessage: "You are a helpful AI assistant, return highest label from conversation",
                 config: gpt3Config,
                 temperature: 0,
-                functions: new[] { this.GetHighestLabelFunction },
+                functions: new[] { this.GetHighestLabelFunctionContract.ToOpenAIFunctionDefinition() },
                 functionMap: new Dictionary<string, Func<string, Task<string>>>
                 {
                     { nameof(GetHighestLabel), this.GetHighestLabelWrapper },
                 });
 
-            var imageUri = new Uri(@"https://microsoft.github.io/autogen/assets/images/level2algebra-659ba95286432d9945fc89e84d606797.png");
+            var imageUri = new Uri(@"https://autogenhub.github.io/autogen/assets/images/level2algebra-659ba95286432d9945fc89e84d606797.png");
             var oaiMessage = new ChatRequestUserMessage(
                 new ChatMessageTextContentItem("which label has the highest inference cost"),
                 new ChatMessageImageContentItem(imageUri));
@@ -116,7 +123,7 @@ namespace AutoGen.Tests
         public async Task GPTFunctionCallAgentTestAsync()
         {
             var config = this.CreateAzureOpenAIGPT35TurboConfig();
-            var agentWithFunction = new GPTAgent("gpt", "You are a helpful AI assistant", config, 0, functions: new[] { this.EchoAsyncFunction });
+            var agentWithFunction = new GPTAgent("gpt", "You are a helpful AI assistant", config, 0, functions: new[] { this.EchoAsyncFunctionContract.ToOpenAIFunctionDefinition() });
 
             await EchoFunctionCallTestAsync(agentWithFunction);
         }
@@ -233,7 +240,7 @@ namespace AutoGen.Tests
                 systemMessage: "You are a helpful AI assistant",
                 config: config,
                 temperature: 0,
-                functions: new[] { this.EchoAsyncFunction },
+                functions: new[] { this.EchoAsyncFunctionContract.ToOpenAIFunctionDefinition() },
                 functionMap: new Dictionary<string, Func<string, Task<string>>>
                 {
                     { nameof(EchoAsync), this.EchoAsyncWrapper },

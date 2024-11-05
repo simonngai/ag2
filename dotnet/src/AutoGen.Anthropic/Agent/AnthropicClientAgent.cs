@@ -1,4 +1,13 @@
-﻿using System;
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// AnthropicClientAgent.cs
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -61,13 +70,14 @@ public class AnthropicClientAgent : IStreamingAgent
     {
         var chatCompletionRequest = new ChatCompletionRequest()
         {
-            SystemMessage = _systemMessage,
+            SystemMessage = [new SystemMessage { Text = _systemMessage }],
             MaxTokens = options?.MaxToken ?? _maxTokens,
             Model = _modelName,
             Stream = shouldStream,
             Temperature = (decimal?)options?.Temperature ?? _temperature,
             Tools = _tools?.ToList(),
-            ToolChoice = _toolChoice ?? ToolChoice.Auto
+            ToolChoice = _toolChoice ?? (_tools is { Length: > 0 } ? ToolChoice.Auto : null),
+            StopSequences = options?.StopSequence?.ToArray(),
         };
 
         chatCompletionRequest.Messages = BuildMessages(messages);
@@ -95,6 +105,22 @@ public class AnthropicClientAgent : IStreamingAgent
             }
         }
 
-        return chatMessages;
+        // merge messages with the same role
+        // fixing #2884
+        var mergedMessages = chatMessages.Aggregate(new List<ChatMessage>(), (acc, message) =>
+        {
+            if (acc.Count > 0 && acc.Last().Role == message.Role)
+            {
+                acc.Last().Content.AddRange(message.Content);
+            }
+            else
+            {
+                acc.Add(message);
+            }
+
+            return acc;
+        });
+
+        return mergedMessages;
     }
 }

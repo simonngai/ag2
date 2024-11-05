@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
+# SPDX-License-Identifier: MIT
 import copy
 import json
 import logging
@@ -41,6 +47,7 @@ class WebSurferAgent(ConversableAgent):
         summarizer_llm_config: Optional[Union[Dict, Literal[False]]] = None,
         default_auto_reply: Optional[Union[str, Dict, None]] = "",
         browser_config: Optional[Union[Dict, None]] = None,
+        **kwargs,
     ):
         super().__init__(
             name=name,
@@ -53,6 +60,7 @@ class WebSurferAgent(ConversableAgent):
             code_execution_config=code_execution_config,
             llm_config=llm_config,
             default_auto_reply=default_auto_reply,
+            **kwargs,
         )
 
         self._create_summarizer_client(summarizer_llm_config, llm_config)

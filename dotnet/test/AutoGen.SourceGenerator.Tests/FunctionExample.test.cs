@@ -1,10 +1,17 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // FunctionExample.test.cs
 
 using System.Text.Json;
 using ApprovalTests;
 using ApprovalTests.Namers;
 using ApprovalTests.Reporters;
+using AutoGen.OpenAI.V1.Extension;
 using Azure.AI.OpenAI;
 using FluentAssertions;
 using Xunit;
@@ -29,7 +36,7 @@ namespace AutoGen.SourceGenerator.Tests
             };
 
             this.VerifyFunction(functionExamples.AddWrapper, args, 3);
-            this.VerifyFunctionDefinition(functionExamples.AddFunction);
+            this.VerifyFunctionDefinition(functionExamples.AddFunctionContract.ToOpenAIFunctionDefinition());
         }
 
         [Fact]
@@ -41,7 +48,7 @@ namespace AutoGen.SourceGenerator.Tests
             };
 
             this.VerifyFunction(functionExamples.SumWrapper, args, 6.0);
-            this.VerifyFunctionDefinition(functionExamples.SumFunction);
+            this.VerifyFunctionDefinition(functionExamples.SumFunctionContract.ToOpenAIFunctionDefinition());
         }
 
         [Fact]
@@ -57,7 +64,7 @@ namespace AutoGen.SourceGenerator.Tests
             };
 
             await this.VerifyAsyncFunction(functionExamples.DictionaryToStringAsyncWrapper, args, JsonSerializer.Serialize(args.xargs, jsonSerializerOptions));
-            this.VerifyFunctionDefinition(functionExamples.DictionaryToStringAsyncFunction);
+            this.VerifyFunctionDefinition(functionExamples.DictionaryToStringAsyncFunctionContract.ToOpenAIFunctionDefinition());
         }
 
         [Fact]
@@ -96,7 +103,7 @@ namespace AutoGen.SourceGenerator.Tests
             };
 
             this.VerifyFunction(functionExamples.QueryWrapper, args, new[] { "hello", "hello", "hello" });
-            this.VerifyFunctionDefinition(functionExamples.QueryFunction);
+            this.VerifyFunctionDefinition(functionExamples.QueryFunctionContract.ToOpenAIFunctionDefinition());
         }
 
         [UseReporter(typeof(DiffReporter))]

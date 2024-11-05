@@ -1,3 +1,9 @@
+﻿// Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+// SPDX-License-Identifier: Apache-2.0
+// Contributions to this project, i.e., https://github.com/autogenhub/autogen, 
+// are licensed under the Apache License, Version 2.0 (Apache-2.0).
+// Portions derived from  https://github.com/microsoft/autogen under the MIT License.
+// SPDX-License-Identifier: MIT
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // AnthropicClient.cs
 
@@ -24,12 +30,13 @@ public sealed class AnthropicClient : IDisposable
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new ContentBaseConverter(), new JsonPropertyNameEnumConverter<ToolChoiceType>() }
-    };
-
-    private static readonly JsonSerializerOptions JsonDeserializerOptions = new()
-    {
-        Converters = { new ContentBaseConverter(), new JsonPropertyNameEnumConverter<ToolChoiceType>() }
+        Converters =
+        {
+            new ContentBaseConverter(),
+            new JsonPropertyNameEnumConverter<ToolChoiceType>(),
+            new JsonPropertyNameEnumConverter<CacheControlType>(),
+            new SystemMessageConverter(),
+        }
     };
 
     public AnthropicClient(HttpClient httpClient, string baseUrl, string apiKey)
@@ -48,7 +55,9 @@ public sealed class AnthropicClient : IDisposable
         var responseStream = await httpResponseMessage.Content.ReadAsStreamAsync();
 
         if (httpResponseMessage.IsSuccessStatusCode)
+        {
             return await DeserializeResponseAsync<ChatCompletionResponse>(responseStream, cancellationToken);
+        }
 
         ErrorResponse res = await DeserializeResponseAsync<ErrorResponse>(responseStream, cancellationToken);
         throw new Exception(res.Error?.Message);
@@ -90,13 +99,7 @@ public sealed class AnthropicClient : IDisposable
                 {
                     var res = await JsonSerializer.DeserializeAsync<ChatCompletionResponse>(
                         new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)),
-                        cancellationToken: cancellationToken);
-
-                    if (res == null)
-                    {
-                        throw new Exception("Failed to deserialize response");
-                    }
-
+                        cancellationToken: cancellationToken) ?? throw new Exception("Failed to deserialize response");
                     if (res.Delta?.Type == "input_json_delta" && !string.IsNullOrEmpty(res.Delta.PartialJson) &&
                         currentEvent.ContentBlock != null)
                     {
@@ -139,12 +142,13 @@ public sealed class AnthropicClient : IDisposable
         var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl);
         var jsonRequest = JsonSerializer.Serialize(requestObject, JsonSerializerOptions);
         httpRequestMessage.Content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+        httpRequestMessage.Headers.Add("anthropic-beta", "prompt-caching-2024-07-31");
         return _httpClient.SendAsync(httpRequestMessage, cancellationToken);
     }
 
     private async Task<T> DeserializeResponseAsync<T>(Stream responseStream, CancellationToken cancellationToken)
     {
-        return await JsonSerializer.DeserializeAsync<T>(responseStream, JsonDeserializerOptions, cancellationToken)
+        return await JsonSerializer.DeserializeAsync<T>(responseStream, JsonSerializerOptions, cancellationToken)
                ?? throw new Exception("Failed to deserialize response");
     }
 
