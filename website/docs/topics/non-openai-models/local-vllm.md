@@ -11,7 +11,7 @@ Running this stack requires the installation of:
 1. AutoGen ([installation instructions](/docs/installation))
 2. vLLM
 
-Note: We recommend using a virtual environment for your stack, see [this article](https://autogenhub.github.io/autogen/docs/installation/#create-a-virtual-environment-optional)
+Note: We recommend using a virtual environment for your stack, see [this article](https://ag2ai.github.io/ag2/docs/installation/#create-a-virtual-environment-optional)
 for guidance.
 
 ## Installing vLLM
@@ -49,7 +49,7 @@ Create a file name `autogenmistraltemplate.jinja` with the following content:
 
     {% if (message['role'] == 'user' or message['role'] == 'system') %}
         {{ '[INST] ' + message['content'] + ' [/INST]' }}
-    {% elif message['role'] == 'assistant' %}
+    {% elsif message['role'] == 'assistant' %}
         {{ message['content'] + eos_token}}
     {% else %}
         {{ raise_exception('Only system, user and assistant roles are supported!') }}
