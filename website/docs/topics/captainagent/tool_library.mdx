@@ -10,7 +10,7 @@ First install the requirements for running tools via pip. The requirements file 
 ### Subscribe to Certain APIs
 Some tools require Bing Search API key and RapidAPI key.
 For Bing API, you can read more about how to get an API on the [Bing Web Search API](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) page.
-For RapidAPI, you can [sign up](https://rapidapi.com/auth/sign-up) and subscribe to these two links([link1](https://rapidapi.com/illmagination/api/youtube-captions-and-transcripts/), [link2](https://rapidapi.com/420vijay47/api/youtube-mp3-downloader2/)).
+For RapidAPI, you can [sign up](https://rapidapi.com/auth/sign-up) and subscribe to these two links([link1](https://rapidapi.com/solid-api-solid-api-default/api/youtube-transcript3), [link2](https://rapidapi.com/420vijay47/api/youtube-mp3-downloader2)).
 These two apis have free billing options and there is no need to worry about extra costs for small scale runs.
 
 Whenever you run the tool-related code, remember to export the api keys to system variables.
@@ -58,8 +58,8 @@ A user proxy with the ability to execute the code will be added to the nested ch
 [User Defined Functions](/docs/topics/code-execution/user-defined-functions) feature. A `LocalCommandLineCodeExecutor` equipped with all the functions serves as
 code executor for the user proxy.
 
-## Building your own Tool Library
-Building your own tool library is easy, follow the same directory layout as the one we provided. The python files should be named `root/{category}/{tool_name}.py`.
+# Building your own Tool Library
+Building your own tool library is simple, follow the same directory layout as the one we provided. The python files should be named `root/{category}/{tool_name}.py`.
 The tool you'd like to add can be imported in the following fashion:
 
 ```python
@@ -83,3 +83,16 @@ nested_mode_config = {
 ```
 
 By following these steps, you can easily customize the tools library of CaptainAgent and empower your agents with new capabilities.
+
+## Note on Adding Customized Tools
+Due to the implementation of [User Defined Functions](/docs/topics/code-execution/user-defined-functions), when writing your own tool, you need to write your import statement in the function definition. For example, adding an audio transcription tool:
+
+```python
+def audio_transcription(audio_file):
+    import whisper
+    model = whisper.load_model("base")
+    result = model.transcribe(audio_file)
+    return result["text"]
+```
+
+There is also decorator `with_requirements` that may become handy for [adding dependencies](/docs/topics/code-execution/user-defined-functions).

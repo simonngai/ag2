@@ -19,12 +19,14 @@ def get_youtube_caption(videoId):
     import requests
 
     RAPID_API_KEY = os.environ["RAPID_API_KEY"]
-    url = "https://youtube-captions-and-transcripts.p.rapidapi.com/getCaptions"
+    video_url = f"https://www.youtube.com/watch?v={videoId}"
+    url = "https://youtube-transcript3.p.rapidapi.com/api/transcript-with-url"
 
-    querystring = {"videoId": videoId, "lang": "en", "format": "text"}
+    querystring = {"url": video_url, "lang": "en", "flat_text": "true"}
 
-    headers = {"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "youtube-captions-and-transcripts.p.rapidapi.com"}
+    headers = {"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "youtube-transcript3.p.rapidapi.com"}
 
     response = requests.get(url, headers=headers, params=querystring)
     response = response.json()
-    return response["data"]
+    print(response)
+    return response["transcript"]

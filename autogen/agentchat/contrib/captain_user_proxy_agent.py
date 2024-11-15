@@ -5,10 +5,9 @@ from typing import Callable, Dict, List, Literal, Optional, Union
 
 import autogen
 from autogen.agentchat.conversable_agent import ConversableAgent
-from autogen.tool_utils import get_full_tool_description
 
 from .agent_builder import AgentBuilder
-from .tool_retriever import ToolBuilder
+from .tool_retriever import ToolBuilder, get_full_tool_description
 
 
 def check_nested_mode_config(nested_mode_config: Dict):
@@ -20,7 +19,6 @@ def check_nested_mode_config(nested_mode_config: Dict):
             "group_chat_llm_config" in nested_mode_config.keys()
         ), "group_chat_llm_config is required when using autobuild as nested mode."
     elif "meta_prompting_llm_config" in nested_mode_config.keys():
-        # TODO: check meta_prompting_config
         pass
     else:
         raise ValueError("nested_mode_config should contain either autobuild_init_config or meta_prompting_llm_config.")
@@ -94,7 +92,6 @@ Collect information from the general task, follow the suggestions from manager t
             name (str): name of the agent.
             nested_mode_config (dict): the configuration for the nested chat mode.
                 For autobuild, please refer to: autogen.agentchat.contrib.agent_builder[AgentBuilder]
-                TODO: Add meta_prompting description
             is_termination_msg (function): a function that takes a message in the form of a dictionary
                 and returns a boolean value indicating if this received message is a termination message.
                 The dict can contain the following keys: "content", "role", "name", "function_call".
@@ -179,7 +176,7 @@ Collect information from the general task, follow the suggestions from manager t
         if group_name in self.build_history.keys():
             agent_list, agent_configs = builder.load(config_json=json.dumps(self.build_history[group_name]))
             if self._nested_mode_config.get("autobuild_tool_config", None) and agent_configs["coding"] is True:
-                # tool library enabled, load tools and bind to the agents
+                # tool library enabled, reload tools and bind to the agents
                 tool_root_dir = self.tool_root_dir
                 tool_builder = ToolBuilder(
                     corpus_path=os.path.join(tool_root_dir, "tool_description.tsv"),
@@ -204,7 +201,7 @@ Collect information from the general task, follow the suggestions from manager t
                     if len(skills) == 0:
                         skills = [building_task]
 
-                    if self._nested_mode_config["autobuild_tool_config"]["tool_root"] == "default":
+                    if self._nested_mode_config["autobuild_tool_config"].get("tool_root", "default") == "default":
                         cur_path = os.path.dirname(os.path.abspath(__file__))
                         tool_root_dir = os.path.join(cur_path, "captainagent", "tools")
                     else:

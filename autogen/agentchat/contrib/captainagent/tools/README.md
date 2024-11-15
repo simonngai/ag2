@@ -24,11 +24,11 @@ Tools can be imported from `tools/{category}/{tool_name}.py` with exactly the sa
 `tool_description.tsv` contains descriptions of tools for retrieval.
 
 # How to use
-Some tools require Bing Search API key and RapidAPI key. For Bing API, you can read more about how to get an API on the [Bing Web Search API](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) page. For RapidAPI, you can [sign up](https://rapidapi.com/auth/sign-up) and subscribe to these two links([link1](https://rapidapi.com/illmagination/api/youtube-captions-and-transcripts/), [link2](https://rapidapi.com/420vijay47/api/youtube-mp3-downloader2/)). These apis have free billing options and there is no need to worry about extra costs.
+Some tools require Bing Search API key and RapidAPI key. For Bing API, you can read more about how to get an API on the [Bing Web Search API](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) page. For RapidAPI, you can [sign up](https://rapidapi.com/auth/sign-up) and subscribe to these two links([link1](https://rapidapi.com/solid-api-solid-api-default/api/youtube-transcript3), [link2](https://rapidapi.com/420vijay47/api/youtube-mp3-downloader2)). These apis have free billing options and there is no need to worry about extra costs.
 
 To install the requirements for running tools, use pip install.
 ```bash
-pip install -r tools/requirements.txt
+pip install -r autogen/agentchat/contrib/captainagent/tools/README.md
 ```
 
 Whenever you run the tool-related code, remember to export the api keys to system variables.
