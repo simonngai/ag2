@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+# Copyright (c) 2023 - 2024, Owners of https://github.com/ag2ai
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -114,18 +114,18 @@ if "--name" in sys.argv:
     sys.argv.pop(index)  # Removes --name
     package_name = sys.argv.pop(index)  # Removes the value after --name
 else:
-    package_name = "autogen"
+    package_name = "ag2"
 
 
 setuptools.setup(
     name=package_name,
     version=__version__,
     author="Chi Wang & Qingyun Wu",
-    author_email="auto-gen@outlook.com",
+    author_email="support@ag2.ai",
     description="A programming framework for agentic AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/autogenhub/autogen",
+    url="https://github.com/ag2ai/ag2",
     packages=setuptools.find_packages(include=["autogen*"], exclude=["test"]),
     install_requires=install_requires,
     extras_require=extra_require,

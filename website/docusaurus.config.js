@@ -15,13 +15,13 @@ customPostCssPlugin = () => {
 module.exports = {
   title: "AutoGen",
   tagline: "An Open-Source Programming Framework for Agentic AI",
-  url: "https://autogenhub.github.io",
-  baseUrl: "/autogen/",
+  url: "https://ag2ai.github.io",
+  baseUrl: "/ag2/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/ag.ico",
-  organizationName: "autogenhub", // Usually your GitHub org/user name.
-  projectName: "AutoGen", // Usually your repo name.
+  organizationName: "ag2ai", // Usually your GitHub org/user name.
+  projectName: "ag2", // Usually your repo name.
   scripts: [
     {
       src: "/autogen/js/custom.js",
@@ -136,7 +136,7 @@ module.exports = {
           items: [
             {
               label: "Dotnet",
-              href: "https://autogenhub.github.io/autogen-for-net/",
+              href: "https://ag2ai.github.io/autogen-for-net/",
             },
           ],
         },
@@ -151,7 +151,7 @@ module.exports = {
           position: "left",
         },
         {
-          href: "https://github.com/autogenhub/autogen",
+          href: "https://github.com/ag2ai/ag2",
           label: "GitHub",
           position: "right",
         },
@@ -215,7 +215,7 @@ module.exports = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
-          editUrl: "https://github.com/autogenhub/autogen/edit/main/website/",
+          editUrl: "https://github.com/ag2ai/ag2/edit/main/website/",
           remarkPlugins: [math],
           rehypePlugins: [katex],
         },
