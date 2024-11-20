@@ -3,6 +3,8 @@
 [![PyPI version](https://badge.fury.io/py/autogen.svg)](https://badge.fury.io/py/autogen)
 [![Build](https://github.com/ag2ai/ag2/actions/workflows/python-package.yml/badge.svg)](https://github.com/ag2ai/ag2/actions/workflows/python-package.yml)
 ![Python Version](https://img.shields.io/badge/3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/pyautogen)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/autogen)
 [![Discord](https://img.shields.io/discord/1153072414184452236?logo=discord&style=flat)](https://discord.gg/pAbnFJrkgZ)
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40ag2ai)](https://x.com/ag2ai)
 
@@ -11,6 +13,7 @@
 # [AG2](https://github.com/ag2ai/ag2)
 
 [📚 Cite paper](#related-papers).
+
 <!-- <p align="center">
     <img src="https://github.com/ag2ai/ag2/blob/main/website/static/img/flaml.svg"  width=200>
     <br>
@@ -20,24 +23,26 @@
 >
 > :fire: :tada: Nov 11, 2024: We are evolving AutoGen into AG2! A new organization [ag2ai](https://github.com/ag2ai) is created to host the development of AG2 and related projects with open governance. We invite collaborators from all organizations and individuals to join the development.
 
+:fire: :tada: AG2 is available via `ag2` (or its alias `autogen` or `pyautogen`) on PyPI! Starting with version 0.3.2, you can now install AG2 using:
 
-:fire: :tada: AG2 is available via `ag2` (or its alias  `autogen` or  `pyautogen`)  on PyPI! Starting with version 0.3.2, you can now install AG2 using:
 ```
 pip install ag2
 ```
+
 or
+
 ```
 pip install pyautogen
 ```
+
 or
+
 ```
 pip install autogen
 ```
 
-
 📄 **License:**
 We adopt the Apache 2.0 license from v0.3. This enhances our commitment to open-source collaboration while providing additional protections for contributors and users alike.
-
 
 :tada: May 29, 2024: DeepLearning.ai launched a new short course [AI Agentic Design Patterns with AutoGen](https://www.deeplearning.ai/short-courses/ai-agentic-design-patterns-with-autogen), made in collaboration with Microsoft and Penn State University, and taught by AutoGen creators [Chi Wang](https://github.com/sonichi) and [Qingyun Wu](https://github.com/qingyun-wu).
 
@@ -90,10 +95,7 @@ AG2 (formerly AutoGen) is an open-source programming framework for building AI a
 
 The project is currently maintained by a [dynamic group of volunteers](MAINTAINERS.md) from several organizations. Contact project administrators Chi Wang and Qingyun Wu via [support@ag2.ai](mailto:support@ag2.ai) if you are interested in becoming a maintainer.
 
-
 ![AutoGen Overview](./website/static/img/autogen_agentchat.png)
-
-
 
 <p align="right" style="font-size: 14px; color: #555; margin-top: 20px;">
   <a href="#readme-top" style="text-decoration: none; color: blue; font-weight: bold;">
@@ -106,15 +108,17 @@ The project is currently maintained by a [dynamic group of volunteers](MAINTAINE
 -->
 
 ## Quickstart
+
 The easiest way to start playing is
+
 1. Click below to use the GitHub Codespace
 
-    [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ag2ai/ag2?quickstart=1)
+   [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ag2ai/ag2?quickstart=1)
 
- 2. Copy OAI_CONFIG_LIST_sample to ./notebook folder, name to OAI_CONFIG_LIST, and set the correct configuration.
- 3. Start playing with the notebooks!
+2. Copy OAI_CONFIG_LIST_sample to ./notebook folder, name to OAI_CONFIG_LIST, and set the correct configuration.
+3. Start playing with the notebooks!
 
-*NOTE*: OAI_CONFIG_LIST_sample lists gpt-4o as the default model. If you use a different model, you may need to revise various system prompts (especially if using weaker models like gpt-4o-mini). Proceed with caution when updating this default and be aware of additional risks related to alignment and safety.
+_NOTE_: OAI_CONFIG_LIST_sample lists gpt-4o as the default model. If you use a different model, you may need to revise various system prompts (especially if using weaker models like gpt-4o-mini). Proceed with caution when updating this default and be aware of additional risks related to alignment and safety.
 
 <p align="right" style="font-size: 14px; color: #555; margin-top: 20px;">
   <a href="#readme-top" style="text-decoration: none; color: blue; font-weight: bold;">
@@ -147,7 +151,7 @@ Find more options in [Installation](https://ag2ai.github.io/ag2/docs/Installatio
 
 <!-- Each of the [`notebook examples`](https://github.com/ag2ai/ag2/tree/main/notebook) may require a specific option to be installed. -->
 
-Even if you are installing and running AG2 locally outside of docker, the recommendation and default behavior of agents is to perform [code execution](https://ag2ai.github.io/ag2/docs/FAQ/#code-execution) in docker. Find more instructions and how to change the default behaviour [here](https://ag2ai.github.io/ag2/docs/Installation#code-execution-with-docker-(default)).
+Even if you are installing and running AG2 locally outside of docker, the recommendation and default behavior of agents is to perform [code execution](https://ag2ai.github.io/ag2/docs/FAQ/#code-execution) in docker. Find more instructions and how to change the default behaviour [here](<https://ag2ai.github.io/ag2/docs/Installation#code-execution-with-docker-(default)>).
 
 For LLM inference configurations, check the [FAQs](https://ag2ai.github.io/ag2/docs/FAQ#set-your-api-endpoints).
 
@@ -193,7 +197,6 @@ After the repo is cloned.
 The figure below shows an example conversation flow with AG2.
 
 ![Agent Chat Example](./website/static/img/chat_example.png)
-
 
 Alternatively, the [sample code](https://github.com/ag2ai/build-with-ag2/blob/main/samples/simple_chat.py) here allows a user to chat with an AG2 agent in ChatGPT style.
 Please find more [code examples](https://ag2ai.github.io/ag2/docs/Examples#automated-multi-agent-chat) for this feature.
@@ -256,7 +259,6 @@ In addition, you can find:
 Explore detailed implementations with sample code and applications to help you get started with AG2.
 [Cookbook](https://github.com/ag2ai/build-with-ag2)
 
-
 ## Related Papers
 
 [AutoGen](https://arxiv.org/abs/2308.08155)
@@ -306,6 +308,7 @@ Explore detailed implementations with sample code and applications to help you g
 ```
 
 [StateFlow](https://arxiv.org/abs/2403.11322)
+
 ```
 @article{wu2024stateflow,
   title={StateFlow: Enhancing LLM Task-Solving through State-Driven Workflows},
@@ -322,6 +325,7 @@ Explore detailed implementations with sample code and applications to help you g
 </p>
 
 ## Contributors Wall
+
 <a href="https://github.com/ag2ai/ag2/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=ag2ai/ag2&max=204" />
 </a>
@@ -333,12 +337,13 @@ Explore detailed implementations with sample code and applications to help you g
 </p>
 
 ## License
+
 This project is licensed under the [Apache License, Version 2.0 (Apache-2.0)](./LICENSE).
 
 This project is a spin-off of [AutoGen](https://github.com/microsoft/autogen) and contains code under two licenses:
 
-- The original code from https://github.com/microsoft/autogen is licensed under the MIT License.  See the [LICENSE_original_MIT](./license_original/LICENSE_original_MIT) file for details.
+- The original code from https://github.com/microsoft/autogen is licensed under the MIT License. See the [LICENSE_original_MIT](./license_original/LICENSE_original_MIT) file for details.
 
-- Modifications and additions made in this fork are licensed under the Apache License, Version 2.0. See the  [LICENSE](./LICENSE) file for the full license text.
+- Modifications and additions made in this fork are licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for the full license text.
 
 We have documented these changes for clarity and to ensure transparency with our user and contributor community. For more details, please see the [NOTICE](./NOTICE.md) file.
