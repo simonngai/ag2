@@ -502,7 +502,6 @@ class SwarmAgent(ConversableAgent):
             
             returned_variables, returned_messages = result
             context_variables.update(returned_variables)
-            messages = self.process_all_messages_before_reply(returned_messages)
             
                 
         # if self._system_message_func:
