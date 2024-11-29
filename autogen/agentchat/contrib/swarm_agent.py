@@ -298,6 +298,8 @@ class SwarmAgent(ConversableAgent):
         self._next_agent = None
 
         self._system_message_func = system_message_func
+        
+        self.hook_lists['update_states_once_selected'] = []
 
     def _set_to_tool_execution(self, context_variables: Optional[Dict[str, Any]] = None):
         """Set to a special instance of SwarmAgent that is responsible for executing tool calls from other swarm agents.
@@ -473,6 +475,14 @@ class SwarmAgent(ConversableAgent):
 
     def update_state(self, context_variables: Optional[Dict[str, Any]], messages: List[Dict[str, Any]]):
         """Updates the state of the agent, system message so far. This is called when they're selected and just before they speak."""
+        
+        for hook in self.hook_lists['update_states_once_selected']:
+            sig = signature(hook)
+            returned_variables, messages = hook(self, context_variables, messages)
+            # if returned_variables is not None:
+            #     context_variables.update(returned_variables)
+            
+                
         if self._system_message_func:
             self.update_system_message(self._system_message_func(context_variables, messages))
 
