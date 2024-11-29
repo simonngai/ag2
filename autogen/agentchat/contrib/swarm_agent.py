@@ -502,7 +502,7 @@ class SwarmAgent(ConversableAgent):
             
             returned_variables, returned_messages = result
             context_variables.update(returned_variables)
-            
+            messages = returned_messages
                 
         # if self._system_message_func:
         #     self.update_system_message(self._system_message_func(context_variables, messages))
