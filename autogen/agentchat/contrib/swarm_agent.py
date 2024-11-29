@@ -267,7 +267,7 @@ class SwarmAgent(ConversableAgent):
         human_input_mode: Literal["ALWAYS", "NEVER", "TERMINATE"] = "NEVER",
         description: Optional[str] = None,
         code_execution_config=False,
-        system_message_func: Optional[Callable] = None,
+        update_state_functions: Optional[Union[List[Callable], Callable]] = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -296,10 +296,29 @@ class SwarmAgent(ConversableAgent):
         # use in the tool execution agent to transfer to the next agent
         self._context_variables = {}
         self._next_agent = None
-
-        self._system_message_func = system_message_func
         
         self.hook_lists['update_states_once_selected'] = []
+
+        self.register_update_states_functions(update_state_functions)
+
+    def register_update_states_functions(self, functions: Optional[Union[List[Callable], Callable]]):
+        """
+        Register functions that will be called when the agent is selected and before it speaks.
+        You can add your own validation or precondition functions here.
+        
+        Args:
+            functions (List[Callable[[], None]]): A list of functions to be registered. Each function
+                is called when the agent is selected and before it speaks.
+        """
+        if functions is None: return
+        if not isinstance(functions, list) and not isinstance(functions, Callable):
+            raise ValueError("functions must be a list of callables")
+        
+        if isinstance(functions, Callable):
+            functions = [functions]
+            
+        for func in functions:
+            self.register_hook('update_states_once_selected', func)
 
     def _set_to_tool_execution(self, context_variables: Optional[Dict[str, Any]] = None):
         """Set to a special instance of SwarmAgent that is responsible for executing tool calls from other swarm agents.
@@ -477,14 +496,17 @@ class SwarmAgent(ConversableAgent):
         """Updates the state of the agent, system message so far. This is called when they're selected and just before they speak."""
         
         for hook in self.hook_lists['update_states_once_selected']:
-            sig = signature(hook)
-            returned_variables, messages = hook(self, context_variables, messages)
-            # if returned_variables is not None:
-            #     context_variables.update(returned_variables)
+            result = hook(self, context_variables, messages)
+            
+            if result is None: continue
+            
+            returned_variables, returned_messages = result
+            context_variables.update(returned_variables)
+            messages = self.process_all_messages_before_reply(returned_messages)
             
                 
-        if self._system_message_func:
-            self.update_system_message(self._system_message_func(context_variables, messages))
+        # if self._system_message_func:
+        #     self.update_system_message(self._system_message_func(context_variables, messages))
 
 
 # Forward references for SwarmAgent in SwarmResult
