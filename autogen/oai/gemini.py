@@ -262,7 +262,11 @@ class GeminiClient:
         ans = ""
         random_id = random.randint(0, 10000)
         prev_function_calls = []
-        for part in response.parts:
+        if self.use_vertexai:
+            parts = response.candidates[0].content.parts
+        else:
+            parts = response.parts
+        for part in parts:
 
             # Function calls
             if fn_call := part.function_call:
@@ -271,7 +275,7 @@ class GeminiClient:
                 if fn_call not in prev_function_calls:
                     autogen_tool_calls.append(
                         ChatCompletionMessageToolCall(
-                            id=random_id,
+                            id=str(random_id),
                             function={
                                 "name": fn_call.name,
                                 "arguments": (
