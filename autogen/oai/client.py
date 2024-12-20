@@ -26,7 +26,7 @@ TOOL_ENABLED = False
 try:
     import openai
 except ImportError:
-    ERROR: Optional[ImportError] = ImportError("Please install openai>=1 and diskcache to use autogen.OpenAIWrapper.")
+    ERROR: ImportError | None = ImportError("Please install openai>=1 and diskcache to use autogen.OpenAIWrapper.")
     OpenAI = object
     AzureOpenAI = object
 else:
@@ -59,7 +59,7 @@ try:
 
     from autogen.oai.cerebras import CerebrasClient
 
-    cerebras_import_exception: Optional[ImportError] = None
+    cerebras_import_exception: ImportError | None = None
 except ImportError as e:
     cerebras_AuthenticationError = cerebras_InternalServerError = cerebras_RateLimitError = Exception
     cerebras_import_exception = e
@@ -72,7 +72,7 @@ try:
 
     from autogen.oai.gemini import GeminiClient
 
-    gemini_import_exception: Optional[ImportError] = None
+    gemini_import_exception: ImportError | None = None
 except ImportError as e:
     gemini_InternalServerError = gemini_ResourceExhausted = Exception
     gemini_import_exception = e
@@ -85,7 +85,7 @@ try:
 
     from autogen.oai.anthropic import AnthropicClient
 
-    anthropic_import_exception: Optional[ImportError] = None
+    anthropic_import_exception: ImportError | None = None
 except ImportError as e:
     anthorpic_InternalServerError = anthorpic_RateLimitError = Exception
     anthropic_import_exception = e
@@ -98,7 +98,7 @@ try:
 
     from autogen.oai.mistral import MistralAIClient
 
-    mistral_import_exception: Optional[ImportError] = None
+    mistral_import_exception: ImportError | None = None
 except ImportError as e:
     mistral_SDKError = mistral_HTTPValidationError = Exception
     mistral_import_exception = e
@@ -108,7 +108,7 @@ try:
 
     from autogen.oai.together import TogetherClient
 
-    together_import_exception: Optional[ImportError] = None
+    together_import_exception: ImportError | None = None
 except ImportError as e:
     together_TogetherException = Exception
     together_import_exception = e
@@ -122,7 +122,7 @@ try:
 
     from autogen.oai.groq import GroqClient
 
-    groq_import_exception: Optional[ImportError] = None
+    groq_import_exception: ImportError | None = None
 except ImportError as e:
     groq_InternalServerError = groq_RateLimitError = groq_APIConnectionError = Exception
     groq_import_exception = e
@@ -136,7 +136,7 @@ try:
 
     from autogen.oai.cohere import CohereClient
 
-    cohere_import_exception: Optional[ImportError] = None
+    cohere_import_exception: ImportError | None = None
 except ImportError as e:
     cohere_InternalServerError = cohere_TooManyRequestsError = cohere_ServiceUnavailableError = Exception
     cohere_import_exception = e
@@ -149,7 +149,7 @@ try:
 
     from autogen.oai.ollama import OllamaClient
 
-    ollama_import_exception: Optional[ImportError] = None
+    ollama_import_exception: ImportError | None = None
 except ImportError as e:
     ollama_RequestError = ollama_ResponseError = Exception
     ollama_import_exception = e
@@ -162,7 +162,7 @@ try:
 
     from autogen.oai.bedrock import BedrockClient
 
-    bedrock_import_exception: Optional[ImportError] = None
+    bedrock_import_exception: ImportError | None = None
 except ImportError as e:
     bedrock_BotoCoreError = bedrock_ClientError = Exception
     bedrock_import_exception = e
@@ -201,18 +201,18 @@ class ModelClient(Protocol):
     class ModelClientResponseProtocol(Protocol):
         class Choice(Protocol):
             class Message(Protocol):
-                content: Optional[str]
+                content: str | None
 
             message: Message
 
-        choices: List[Choice]
+        choices: list[Choice]
         model: str
 
-    def create(self, params: Dict[str, Any]) -> ModelClientResponseProtocol: ...  # pragma: no cover
+    def create(self, params: dict[str, Any]) -> ModelClientResponseProtocol: ...  # pragma: no cover
 
     def message_retrieval(
         self, response: ModelClientResponseProtocol
-    ) -> Union[List[str], List[ModelClient.ModelClientResponseProtocol.Choice.Message]]:
+    ) -> list[str] | list[ModelClient.ModelClientResponseProtocol.Choice.Message]:
         """
         Retrieve and return a list of strings or a list of Choice.Message from the response.
 
@@ -224,7 +224,7 @@ class ModelClient(Protocol):
     def cost(self, response: ModelClientResponseProtocol) -> float: ...  # pragma: no cover
 
     @staticmethod
-    def get_usage(response: ModelClientResponseProtocol) -> Dict:
+    def get_usage(response: ModelClientResponseProtocol) -> dict:
         """Return usage summary of the response using RESPONSE_USAGE_KEYS."""
         ...  # pragma: no cover
 
@@ -237,7 +237,7 @@ class PlaceHolderClient:
 class OpenAIClient:
     """Follows the Client protocol and wraps the OpenAI client."""
 
-    def __init__(self, client: Union[OpenAI, AzureOpenAI], response_format: Optional[BaseModel] = None):
+    def __init__(self, client: OpenAI | AzureOpenAI, response_format: BaseModel | None = None):
         self._oai_client = client
         self.response_format = response_format
         if (
@@ -249,9 +249,7 @@ class OpenAIClient:
                 "The API key specified is not a valid OpenAI format; it won't work with the OpenAI-hosted model."
             )
 
-    def message_retrieval(
-        self, response: Union[ChatCompletion, Completion]
-    ) -> Union[List[str], List[ChatCompletionMessage]]:
+    def message_retrieval(self, response: ChatCompletion | Completion) -> list[str] | list[ChatCompletionMessage]:
         """Retrieve the messages from the response."""
         choices = response.choices
         if isinstance(response, Completion):
@@ -279,7 +277,7 @@ class OpenAIClient:
                 for choice in choices
             ]
 
-    def create(self, params: Dict[str, Any]) -> ChatCompletion:
+    def create(self, params: dict[str, Any]) -> ChatCompletion:
         """Create a completion for a given config using openai's client.
 
         Args:
@@ -314,8 +312,8 @@ class OpenAIClient:
             iostream.print("\033[32m", end="")
 
             # Prepare for potential function call
-            full_function_call: Optional[Dict[str, Any]] = None
-            full_tool_calls: Optional[List[Optional[Dict[str, Any]]]] = None
+            full_function_call: dict[str, Any] | None = None
+            full_tool_calls: list[dict[str, Any] | None] | None = None
 
             # Send the chat completion request to OpenAI's API and process the response in chunks
             for chunk in create_or_parse(**params):
@@ -424,7 +422,7 @@ class OpenAIClient:
 
         return response
 
-    def cost(self, response: Union[ChatCompletion, Completion]) -> float:
+    def cost(self, response: ChatCompletion | Completion) -> float:
         """Calculate the cost of the response."""
         model = response.model
         if model not in OAI_PRICE1K:
@@ -445,7 +443,7 @@ class OpenAIClient:
         return tmp_price1K * (n_input_tokens + n_output_tokens) / 1000  # type: ignore [operator]
 
     @staticmethod
-    def get_usage(response: Union[ChatCompletion, Completion]) -> Dict:
+    def get_usage(response: ChatCompletion | Completion) -> dict:
         return {
             "prompt_tokens": response.usage.prompt_tokens if response.usage is not None else 0,
             "completion_tokens": response.usage.completion_tokens if response.usage is not None else 0,
@@ -479,13 +477,13 @@ class OpenAIWrapper:
     openai_kwargs = set(inspect.getfullargspec(OpenAI.__init__).kwonlyargs)
     aopenai_kwargs = set(inspect.getfullargspec(AzureOpenAI.__init__).kwonlyargs)
     openai_kwargs = openai_kwargs | aopenai_kwargs
-    total_usage_summary: Optional[Dict[str, Any]] = None
-    actual_usage_summary: Optional[Dict[str, Any]] = None
+    total_usage_summary: dict[str, Any] | None = None
+    actual_usage_summary: dict[str, Any] | None = None
 
     def __init__(
         self,
         *,
-        config_list: Optional[List[Dict[str, Any]]] = None,
+        config_list: list[dict[str, Any]] | None = None,
         **base_config: Any,
     ):
         """
@@ -526,8 +524,8 @@ class OpenAIWrapper:
         # It's OK if "model" is not provided in base_config or config_list
         # Because one can provide "model" at `create` time.
 
-        self._clients: List[ModelClient] = []
-        self._config_list: List[Dict[str, Any]] = []
+        self._clients: list[ModelClient] = []
+        self._config_list: list[dict[str, Any]] = []
 
         if config_list:
             config_list = [config.copy() for config in config_list]  # make a copy before modifying
@@ -541,19 +539,19 @@ class OpenAIWrapper:
             self._config_list = [extra_kwargs]
         self.wrapper_id = id(self)
 
-    def _separate_openai_config(self, config: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    def _separate_openai_config(self, config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Separate the config into openai_config and extra_kwargs."""
         openai_config = {k: v for k, v in config.items() if k in self.openai_kwargs}
         extra_kwargs = {k: v for k, v in config.items() if k not in self.openai_kwargs}
         return openai_config, extra_kwargs
 
-    def _separate_create_config(self, config: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    def _separate_create_config(self, config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Separate the config into create_config and extra_kwargs."""
         create_config = {k: v for k, v in config.items() if k not in self.extra_kwargs}
         extra_kwargs = {k: v for k, v in config.items() if k in self.extra_kwargs}
         return create_config, extra_kwargs
 
-    def _configure_azure_openai(self, config: Dict[str, Any], openai_config: Dict[str, Any]) -> None:
+    def _configure_azure_openai(self, config: dict[str, Any], openai_config: dict[str, Any]) -> None:
         openai_config["azure_deployment"] = openai_config.get("azure_deployment", config.get("model"))
         if openai_config["azure_deployment"] is not None:
             openai_config["azure_deployment"] = openai_config["azure_deployment"].replace(".", "")
@@ -567,7 +565,7 @@ class OpenAIWrapper:
                 azure.identity.DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
             )
 
-    def _configure_openai_config_for_bedrock(self, config: Dict[str, Any], openai_config: Dict[str, Any]) -> None:
+    def _configure_openai_config_for_bedrock(self, config: dict[str, Any], openai_config: dict[str, Any]) -> None:
         """Update openai_config with AWS credentials from config."""
         required_keys = ["aws_access_key", "aws_secret_key", "aws_region"]
         optional_keys = ["aws_session_token", "aws_profile_name"]
@@ -578,7 +576,7 @@ class OpenAIWrapper:
             if key in config:
                 openai_config[key] = config[key]
 
-    def _register_default_client(self, config: Dict[str, Any], openai_config: Dict[str, Any]) -> None:
+    def _register_default_client(self, config: dict[str, Any], openai_config: dict[str, Any]) -> None:
         """Create a client with the given config to override openai_config,
         after removing extra kwargs.
 
@@ -690,21 +688,21 @@ class OpenAIWrapper:
     @classmethod
     def instantiate(
         cls,
-        template: Optional[Union[str, Callable[[Dict[str, Any]], str]]],
-        context: Optional[Dict[str, Any]] = None,
-        allow_format_str_template: Optional[bool] = False,
-    ) -> Optional[str]:
+        template: str | Callable[[dict[str, Any]], str] | None,
+        context: dict[str, Any] | None = None,
+        allow_format_str_template: bool | None = False,
+    ) -> str | None:
         if not context or template is None:
             return template  # type: ignore [return-value]
         if isinstance(template, str):
             return template.format(**context) if allow_format_str_template else template
         return template(context)
 
-    def _construct_create_params(self, create_config: Dict[str, Any], extra_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _construct_create_params(self, create_config: dict[str, Any], extra_kwargs: dict[str, Any]) -> dict[str, Any]:
         """Prime the create_config with additional_kwargs."""
         # Validate the config
-        prompt: Optional[str] = create_config.get("prompt")
-        messages: Optional[List[Dict[str, Any]]] = create_config.get("messages")
+        prompt: str | None = create_config.get("prompt")
+        messages: list[dict[str, Any]] | None = create_config.get("messages")
         if (prompt is None) == (messages is None):
             raise ValueError("Either prompt or messages should be in create config but not both.")
         context = extra_kwargs.get("context")
@@ -961,7 +959,7 @@ class OpenAIWrapper:
 
     @staticmethod
     def _cost_with_customized_price(
-        response: ModelClient.ModelClientResponseProtocol, price_1k: Tuple[float, float]
+        response: ModelClient.ModelClientResponseProtocol, price_1k: tuple[float, float]
     ) -> None:
         """If a customized cost is passed, overwrite the cost in the response."""
         n_input_tokens = response.usage.prompt_tokens if response.usage is not None else 0  # type: ignore [union-attr]
@@ -971,7 +969,7 @@ class OpenAIWrapper:
         return (n_input_tokens * price_1k[0] + n_output_tokens * price_1k[1]) / 1000
 
     @staticmethod
-    def _update_dict_from_chunk(chunk: BaseModel, d: Dict[str, Any], field: str) -> int:
+    def _update_dict_from_chunk(chunk: BaseModel, d: dict[str, Any], field: str) -> int:
         """Update the dict from the chunk.
 
         Reads `chunk.field` and if present updates `d[field]` accordingly.
@@ -1006,10 +1004,10 @@ class OpenAIWrapper:
 
     @staticmethod
     def _update_function_call_from_chunk(
-        function_call_chunk: Union[ChoiceDeltaToolCallFunction, ChoiceDeltaFunctionCall],
-        full_function_call: Optional[Dict[str, Any]],
+        function_call_chunk: ChoiceDeltaToolCallFunction | ChoiceDeltaFunctionCall,
+        full_function_call: dict[str, Any] | None,
         completion_tokens: int,
-    ) -> Tuple[Dict[str, Any], int]:
+    ) -> tuple[dict[str, Any], int]:
         """Update the function call from the chunk.
 
         Args:
@@ -1038,9 +1036,9 @@ class OpenAIWrapper:
     @staticmethod
     def _update_tool_calls_from_chunk(
         tool_calls_chunk: ChoiceDeltaToolCall,
-        full_tool_call: Optional[Dict[str, Any]],
+        full_tool_call: dict[str, Any] | None,
         completion_tokens: int,
-    ) -> Tuple[Dict[str, Any], int]:
+    ) -> tuple[dict[str, Any], int]:
         """Update the tool call from the chunk.
 
         Args:
@@ -1113,11 +1111,11 @@ class OpenAIWrapper:
         if actual_usage is not None:
             self.actual_usage_summary = update_usage(self.actual_usage_summary, actual_usage)
 
-    def print_usage_summary(self, mode: Union[str, List[str]] = ["actual", "total"]) -> None:
+    def print_usage_summary(self, mode: str | list[str] = ["actual", "total"]) -> None:
         """Print the usage summary."""
         iostream = IOStream.get_default()
 
-        def print_usage(usage_summary: Optional[Dict[str, Any]], usage_type: str = "total") -> None:
+        def print_usage(usage_summary: dict[str, Any] | None, usage_type: str = "total") -> None:
             word_from_type = "including" if usage_type == "total" else "excluding"
             if usage_summary is None:
                 iostream.print("No actual cost incurred (all completions are using cache).", flush=True)
@@ -1174,7 +1172,7 @@ class OpenAIWrapper:
     @classmethod
     def extract_text_or_completion_object(
         cls, response: ModelClient.ModelClientResponseProtocol
-    ) -> Union[List[str], List[ModelClient.ModelClientResponseProtocol.Choice.Message]]:
+    ) -> list[str] | list[ModelClient.ModelClientResponseProtocol.Choice.Message]:
         """Extract the text or ChatCompletion objects from a completion or chat response.
 
         Args:

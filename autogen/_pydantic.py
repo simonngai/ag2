@@ -4,7 +4,7 @@
 #
 # Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
 # SPDX-License-Identifier: MIT
-from typing import Any, Dict, Optional, Tuple, Type, Union, get_args
+from typing import Any, Tuple, TypeVar, Union, get_args
 
 from pydantic import BaseModel
 from pydantic.version import VERSION as PYDANTIC_VERSION
@@ -30,7 +30,7 @@ if not PYDANTIC_V1:
         """
         return TypeAdapter(t).json_schema()
 
-    def model_dump(model: BaseModel) -> Dict[str, Any]:
+    def model_dump(model: BaseModel) -> dict[str, Any]:
         """Convert a pydantic model to a dict
 
         Args:
@@ -59,7 +59,7 @@ else:  # pragma: no cover
     from pydantic import schema_of
     from pydantic.typing import evaluate_forwardref as evaluate_forwardref  # type: ignore[no-redef]
 
-    JsonSchemaValue = Dict[str, Any]  # type: ignore[misc]
+    JsonSchemaValue = dict[str, Any]  # type: ignore[misc]
 
     def type2schema(t: Any) -> JsonSchemaValue:
         """Convert a type to a JSON schema
@@ -92,7 +92,7 @@ else:  # pragma: no cover
 
             return d
 
-    def model_dump(model: BaseModel) -> Dict[str, Any]:
+    def model_dump(model: BaseModel) -> dict[str, Any]:
         """Convert a pydantic model to a dict
 
         Args:
