@@ -460,6 +460,21 @@ class FormatterProtocol(Protocol):
     def format(self) -> str: ...
 
 
+class OpenAI_O1(OpenAIClient):
+
+    def __init__(self, **kwargs):
+        super().__init__(OpenAI(**kwargs))
+
+    def create(self, params: Dict[str, Any]) -> ChatCompletion:
+        # replace any message with the role "system" to role "assistant" to avoid errors
+        for message in params["messages"]:
+            if message["role"] == "system":
+                message["role"] = "assistant"
+
+        # pass the message to the create method of the parent class
+        return super().create(params)
+
+
 class OpenAIWrapper:
     """A wrapper class for openai client."""
 
@@ -651,6 +666,9 @@ class OpenAIWrapper:
                 if bedrock_import_exception:
                     raise ImportError("Please install `boto3` to use the Amazon Bedrock API.")
                 client = BedrockClient(response_format=response_format, **openai_config)
+                self._clients.append(client)
+            elif api_type is not None and api_type.startswith("openai-o1"):
+                client = OpenAI_O1(**openai_config)
                 self._clients.append(client)
             else:
                 client = OpenAI(**openai_config)
